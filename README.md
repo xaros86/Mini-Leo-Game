@@ -18,19 +18,21 @@ Un piccolo gioco 3D (three.js) per bimbi di 2–3 anni. Si gioca con **un dito**
 - Pochi effetti sonori, morbidi e intonati con la musica: solo per palloncini/bolle, amici, Leo, raccolta, festa e sorprese. **Toccare il terreno non fa rumore.**
 - **Musica on/off**: tieni premuto per un secondo il bottoncino ♫ in alto a destra (una pressione breve non fa nulla, così il bimbo non la spegne per sbaglio).
 
-### Gli 8 mondi
+### I 10 mondi
 | # | Mondo | Da raccogliere | Amici | Sorpresa |
 |---|---|---|---|---|
 | 0 | 🌳 Prato | coccinelle | farfalle | nuvole che piovono |
-| 1 | 🐄 Fattoria | uova | mucca, maiale, pecora, pulcini | il fienile |
-| 2 | 🏖️ Spiaggia | stelle marine | granchi | impronte nella sabbia, occhiali da sole |
-| 3 | 🐠 Fondale | perle | pesci, granchio, meduse | il forziere, maschera da sub |
-| 4 | ❄️ Neve | regali | pinguini | neve che cade, berretto |
-| 5 | 🦕 Dinosauri | ossa | dinosauri | il vulcano |
-| 6 | 🌙 Notte | stelle luminose | lucciole | lanterne-fuochi d'artificio |
-| 7 | 🚀 Spazio | pianetini | alieni, dischi volanti | gravità leggera, il razzo, casco da astronauta |
+| 1 | 🐄 Fattoria | uova | mucca, maiale, pecora, pulcini | il fienile (si apre ed escono pulcini) |
+| 2 | 🏙️ Città | gelati | macchinine sulla strada | il semaforo che cambia colore |
+| 3 | 🏖️ Spiaggia | stelle marine | granchi | impronte nella sabbia, occhiali da sole |
+| 4 | 🐠 Fondale | perle | pesci, meduse | il forziere, maschera da sub |
+| 5 | ❄️ Neve | regali | pinguini | abeti con le palline e omini di pan di zenzero, berretto |
+| 6 | 🦕 Dinosauri | ossa | dinosauri | il vulcano |
+| 7 | 🍭 Paese dei dolci | cupcake | orsetti gommosi | alberi lecca-lecca con le caramelle |
+| 8 | 🌙 Notte | stelle luminose | lucciole | lanterne-fuochi d'artificio |
+| 9 | 🚀 Spazio | pianetini | alieni, dischi volanti | gravità leggera, il razzo, casco da astronauta |
 
-In ogni mondo ci sono anche il pallone e gli alberi con i frutti. Dopo lo spazio si ricomincia dal prato. Per provare un mondo: `index.html?mondo=5` (0–7).
+In ogni mondo ci sono anche il pallone e gli alberi con i frutti. Dopo lo spazio si ricomincia dal prato. Per provare un mondo: `index.html?mondo=5` (0–9).
 
 ## Installarlo su Android come APK
 A ogni aggiornamento GitHub crea l'APK da solo (workflow `Crea APK Android`). Per scaricarlo dal telefono:

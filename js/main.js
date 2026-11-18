@@ -90,6 +90,8 @@ const sfx = {
       crab: () => this.arp([N(24), N(24), N(28)], 0.1, { vol: 0.06, dur: 0.12 }),
       penguin: () => this.note(N(12), { slide: N(28), vol: 0.07, dur: 0.5, bright: 0 }),
       butterfly: () => this.arp([N(28), N(31), N(33)], 0.06, { vol: 0.05, dur: 0.4 }),
+      car: () => this.arp([N(16), N(16)], 0.16, { vol: 0.07, dur: 0.14, type: 'triangle', bright: 0.3 }),
+      gummy: () => this.note(N(19), { slide: N(26), vol: 0.07, dur: 0.22, bright: 0 }),
       firefly: () => this.arp([N(31), N(28), N(33)], 0.06, { vol: 0.05, dur: 0.5 }),
     };
     (V[kind] || V.butterfly)();
@@ -545,7 +547,7 @@ const leo = (() => {
       else {
         const sp = Math.min(d, 4.2 * dt);
         st.pos.x += (dx / d) * sp; st.pos.z += (dz / d) * sp;
-        wantYaw = clamp(Math.atan2(dx, dz), -1.25, 1.25); // si gira di lato, mai di schiena
+        wantYaw = Math.atan2(dx, dz);
         if (st.grounded && st.t - st.lastHop > 0.05) { st.vy = 3.6 * JF(); st.grounded = false; st.lastHop = st.t; }
       }
     }
@@ -630,6 +632,7 @@ function pineTree() {
     g.add(mesh(CONE, 0xffffff, 0, y + h * 0.42, 0, r * 0.55, h * 0.55, r * 0.55));
   });
   g.add(ball(0.12, 0xffd23f, 0, 3.4, 0));
+  [[0.75, 1.0, 0.75], [-0.7, 1.1, 0.7], [0.5, 1.8, 0.6], [-0.45, 1.9, 0.55], [0.25, 2.45, 0.45], [0, 1.4, 1.05]].forEach(([x, y, z], i) => g.add(ball(0.11, glow(PALETTE[i * 2 % PALETTE.length]), x, y, z)));
   return g;
 }
 const swayers = []; // cose che ondeggiano (alghe)
@@ -652,6 +655,23 @@ function crystalTree() {
   halo.position.y = 1.5; halo.scale.setScalar(4); g.add(halo);
   return g;
 }
+function cityTree() {
+  const g = new THREE.Group();
+  g.add(mesh(CYL, 0xb8b0a8, 0, 0.2, 0, 0.55, 0.4, 0.55), mesh(CYL, 0x7a5a3a, 0, 0.42, 0, 0.5, 0.05, 0.5));
+  g.add(mesh(CYL, 0x8a5a3a, 0, 1.0, 0, 0.14, 1.2, 0.14));
+  g.add(ball(0.85, pickOne([0x4cc25a, 0x3fae49]), 0, 2.0, 0, 1, 0.95, 1));
+  return g;
+}
+function lollipopTree() {
+  const g = new THREE.Group();
+  g.add(mesh(CYL, 0xffffff, 0, 1.0, 0, 0.09, 2.0, 0.09));
+  const c1 = pickOne([0xff5d73, 0x7bd3ff, 0xb46bff, 0x6bcb77]);
+  const disc = mesh(CYL, c1, 0, 2.3, 0, 0.85, 0.22, 0.85); disc.rotation.x = Math.PI / 2; g.add(disc);
+  [0.62, 0.36].forEach((r) => { const t = mesh(new THREE.TorusGeometry(1, 0.13, 8, 32), 0xffffff, 0, 2.3, 0.1, r, r, r); g.add(t); });
+  g.add(ball(0.1, 0xffffff, 0, 2.3, 0.12));
+  for (let i = 0; i < 3; i++) g.add(ball(0.13, glow(pickOne([0xffd93d, 0xff7bd5, 0x7bd3ff])), rand(-0.6, 0.6), rand(1.9, 2.7), 0.2));
+  return g;
+}
 // ---- frutti che cadono dagli alberi
 function makeFruit(kind) {
   const g = new THREE.Group();
@@ -660,10 +680,21 @@ function makeFruit(kind) {
   if (kind === 'pear') { g.add(ball(0.26, 0xc8e05a, 0, -0.05, 0), ball(0.17, 0xc8e05a, 0, 0.18, 0), mesh(CYL, 0x7a4a24, 0, 0.36, 0, 0.03, 0.12, 0.03)); }
   if (kind === 'berry') { [[0, 0], [0.15, 0.08], [-0.15, 0.08], [0, 0.17]].forEach(([x, y]) => g.add(ball(0.13, 0x9b4dff, x, y, 0.05))); g.add(ball(0.08, 0x4cc27a, 0, 0.3, 0, 1.6, 0.5, 1)); }
   if (kind === 'banana') { for (let i = 0; i < 4; i++) { const b = ball(0.09, 0xffe14d, Math.sin(i * 0.5 - 0.75) * 0.25, Math.cos(i * 0.5 - 0.75) * 0.25 - 0.2, 0, 1, 1, 1); g.add(b); } g.add(ball(0.12, 0xffe14d, -0.05, 0.05, 0, 2.6, 0.9, 1)); g.add(ball(0.04, 0x5a3a20, 0.3, 0.07, 0)); }
+  if (kind === 'candy') {
+    const c = pickOne([0xff5d73, 0x7bd3ff, 0xb46bff, 0xffd93d]);
+    g.add(ball(0.2, c, 0, 0, 0, 1.2, 1, 1));
+    [-1, 1].forEach((k) => { const w = mesh(CONE, c, k * 0.33, 0, 0, 0.14, 0.24, 0.14); w.rotation.z = k * Math.PI / 2; g.add(w); });
+    g.add(mesh(new THREE.TorusGeometry(0.2, 0.03, 6, 20), 0xffffff, 0, 0, 0.02, 1.2, 1, 1));
+  }
   if (kind === 'coconut') { g.add(ball(0.3, 0x7a4a24)); [-0.08, 0.08, 0].forEach((x, i) => g.add(ball(0.04, 0x3b2a20, x, i === 2 ? 0.0 : 0.08, 0.28))); }
-  if (kind === 'cookie') {
-    const c = mesh(CYL, 0xd99a55, 0, 0, 0, 0.32, 0.1, 0.32); c.rotation.x = 1.2; g.add(c);
-    for (let i = 0; i < 5; i++) g.add(ball(0.045, 0x5a3420, rand(-0.18, 0.18), rand(-0.18, 0.18), 0.06 + 0.02));
+  if (kind === 'cookie') { // omino di pan di zenzero
+    const C = 0xc9783a, ICE = 0xffffff;
+    g.add(ball(0.13, C, 0, 0.17, 0, 1, 1, 0.45), ball(0.15, C, 0, -0.06, 0, 0.95, 1.1, 0.45));
+    [-1, 1].forEach((k) => { g.add(ball(0.07, C, k * 0.17, 0.0, 0, 1.4, 0.75, 0.45)); g.add(ball(0.07, C, k * 0.08, -0.22, 0, 0.8, 1.3, 0.45)); });
+    [-0.045, 0.045].forEach((x) => g.add(ball(0.02, ICE, x, 0.2, 0.06)));
+    g.add(smile(0.04, ICE, 0, 0.13, 0.06));
+    [0.0, -0.08].forEach((y) => g.add(ball(0.022, 0xff5d73, 0, y, 0.068)));
+    g.scale.setScalar(1.9);
   }
   return g;
 }
@@ -702,6 +733,19 @@ function makeCollectible(kind) {
     g.add(mesh(BOX, col, 0, 0, 0, 0.62, 0.55, 0.55));
     g.add(mesh(BOX, rib, 0, 0, 0, 0.14, 0.57, 0.57), mesh(BOX, rib, 0, 0, 0, 0.64, 0.57, 0.14));
     g.add(ball(0.13, rib, -0.1, 0.32, 0, 1.2, 0.8, 0.8), ball(0.13, rib, 0.1, 0.32, 0, 1.2, 0.8, 0.8));
+  }
+  if (kind === 'icecream') {
+    const cone = mesh(CONE, 0xe8a85a, 0, -0.18, 0, 0.2, 0.5, 0.2); cone.rotation.x = Math.PI; g.add(cone);
+    [[0, 0.12, 0xff9ac8], [0, 0.34, 0xfff0c4]].forEach(([x, y, c]) => g.add(ball(0.21, c, x, y, 0)));
+    g.add(ball(0.07, 0xff3b5c, 0, 0.56, 0), mesh(CYL, 0x5a8a3a, 0.03, 0.66, 0, 0.01, 0.1, 0.01));
+    face(g, 0.2);
+  }
+  if (kind === 'cupcake') {
+    g.add(mesh(new THREE.CylinderGeometry(0.28, 0.2, 0.3, 14), 0x7bd3ff, 0, -0.1, 0));
+    g.add(ball(0.3, 0xffb0e0, 0, 0.1, 0, 1, 0.7, 1), ball(0.2, 0xffc8ea, 0, 0.26, 0, 1, 0.8, 1));
+    for (let i = 0; i < 6; i++) { const a = i * 1.05; g.add(ball(0.03, glow(PALETTE[i]), Math.cos(a) * 0.2, 0.2 + (i % 2) * 0.06, Math.sin(a) * 0.2 + 0.05)); }
+    g.add(ball(0.07, 0xff3b5c, 0, 0.42, 0));
+    face(g, 0.26);
   }
   if (kind === 'ladybug') {
     g.add(ball(0.36, 0xff3b3b, 0, 0, 0, 1, 1.05, 0.7));
@@ -743,6 +787,8 @@ const HUD_ICON = {
   star: { path: 'M25 3l6.5 14 15 1.6-11.3 10 3.3 15L25 36l-13.5 7.6 3.3-15L3.5 18.6l15-1.6z', fill: '#ffd23f', stroke: '#f0a500' },
   nightstar: { path: 'M25 3l6.5 14 15 1.6-11.3 10 3.3 15L25 36l-13.5 7.6 3.3-15L3.5 18.6l15-1.6z', fill: '#ffe066', stroke: '#fff6c0' },
   starfish: { path: 'M25 3l6.5 14 15 1.6-11.3 10 3.3 15L25 36l-13.5 7.6 3.3-15L3.5 18.6l15-1.6z', fill: '#ff8a5c', stroke: '#e0603a' },
+  icecream: { path: 'M15 24h20L25 47zM25 4a11 11 0 1 0 .01 0z', fill: '#ff9ac8', stroke: '#d0609a' },
+  cupcake: { path: 'M12 27h26l-4 17H16zM9 27c0-9 7-15 16-15s16 6 16 15zM25 4a3.5 3.5 0 1 0 .01 0z', fill: '#ff7bd5', stroke: '#c04aa0' },
   ladybug: { path: 'M25 15a16 14.5 0 1 0 .01 0zM17 12a8 7 0 0 1 16 0zM24.2 16h1.6v28h-1.6zM17 23a3.2 3.2 0 1 0 .01 0zM33 23a3.2 3.2 0 1 0 .01 0zM19 34a3 3 0 1 0 .01 0zM31 34a3 3 0 1 0 .01 0z', fill: '#ff3b3b', stroke: '#a81e1e' },
   bone: { path: 'M13 15a6 6 0 0 1 6 5h12a6 6 0 1 1 6 5 6 6 0 1 1-6 5H19a6 6 0 1 1-6-5 6 6 0 0 1 0-10z', fill: '#fff6e6', stroke: '#c9b08a' },
   egg: { path: 'M25 4c-9 0-16 15-16 25a16 16 0 0 0 32 0C41 19 34 4 25 4z', fill: '#fff3e0', stroke: '#e0b98a' },
@@ -844,6 +890,26 @@ function makeSprout(kind) {
     for (let i = 0; i < 4; i++) { const a = i * 1.6; g.add(ball(0.04, glow(0xffffff), Math.cos(a) * 0.13, 0.45, Math.sin(a) * 0.13)); }
     const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color, transparent: true, opacity: 0.4, depthWrite: false }));
     halo.position.y = 0.35; halo.scale.setScalar(1.3); g.add(halo);
+  }
+  if (kind === 'flowerpot') {
+    color = pickOne(PALETTE);
+    g.add(mesh(new THREE.CylinderGeometry(0.17, 0.12, 0.24, 12), 0xd9734a, 0, 0.12, 0), mesh(CYL, 0xe8845a, 0, 0.25, 0, 0.19, 0.05, 0.19));
+    g.add(mesh(CYL, 0x3d9e3a, 0, 0.42, 0, 0.025, 0.35, 0.025));
+    const h = new THREE.Group(); h.position.y = 0.6; h.rotation.x = -0.6; g.add(h);
+    for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2; h.add(ball(0.09, color, Math.cos(a) * 0.1, Math.sin(a) * 0.1, 0, 1, 1, 0.45)); }
+    h.add(ball(0.07, 0xffe45c, 0, 0, 0.03, 1, 1, 0.6));
+  }
+  if (kind === 'sweet') {
+    color = pickOne([0xff5d73, 0x7bd3ff, 0xb46bff]);
+    if (Math.random() < 0.5) { // lecca-lecca
+      g.add(mesh(CYL, 0xffffff, 0, 0.25, 0, 0.025, 0.5, 0.025));
+      const d = mesh(CYL, color, 0, 0.55, 0, 0.2, 0.08, 0.2); d.rotation.x = Math.PI / 2; g.add(d);
+      g.add(mesh(new THREE.TorusGeometry(0.12, 0.03, 6, 20), 0xffffff, 0, 0.55, 0.045));
+    } else { // bastoncino di zucchero
+      for (let i = 0; i < 6; i++) g.add(mesh(CYL, i % 2 ? 0xffffff : 0xff3b5c, 0, 0.05 + i * 0.08, 0, 0.05, 0.08, 0.05));
+      const hook = mesh(new THREE.TorusGeometry(0.1, 0.05, 8, 16, Math.PI), 0xff3b5c, 0.1, 0.5, 0); g.add(hook);
+      color = 0xff3b5c;
+    }
   }
   if (kind === 'carrot') {
     color = 0xff8a2a;
@@ -1025,6 +1091,28 @@ function makeFriend(kind) {
     [-1, 1].forEach((s) => { g.add(ball(0.06, 0xffffff, s * 0.13, 0.06, 0.15)); g.add(ball(0.035, 0x222222, s * 0.16, 0.06, 0.17)); });
     g.add(ball(0.1, 0xffffff, 0, 0.05, 0.05, 1.8, 0.3, 1.2));
   }
+  if (kind === 'car') {
+    f.color = pickOne([0xff5d73, 0x4d96ff, 0xffd93d, 0x6bcb77, 0xff9a3d]);
+    const i = animal('car', 0.4, 0); f.drive = true;
+    i.add(ball(0.5, f.color, 0, 0.38, 0, 1, 0.5, 0.62));
+    i.add(ball(0.32, f.color, -0.05, 0.62, 0, 1, 0.75, 0.85));
+    [-1, 1].forEach((k) => i.add(ball(0.2, glow(0xbfeaff), -0.05, 0.66, k * 0.2, 1.1, 0.7, 0.3)));
+    i.add(ball(0.2, glow(0xbfeaff), 0.2, 0.64, 0, 0.3, 0.6, 0.9));
+    f.wheels = [];
+    [-0.3, 0.3].forEach((x) => [-0.28, 0.28].forEach((z) => { const w = mesh(CYL, 0x333344, x, 0.16, z, 0.15, 0.1, 0.15); w.rotation.x = Math.PI / 2; i.add(w); const hub = mesh(CYL, 0xdddddd, x, 0.16, z + Math.sign(z) * 0.05, 0.06, 0.02, 0.06); hub.rotation.x = Math.PI / 2; i.add(hub); f.wheels.push(w); }));
+    [-0.15, 0.15].forEach((z) => i.add(ball(0.06, glow(0xfff6c0), 0.49, 0.38, z, 0.4, 1, 1)));
+    const sm = smile(0.08, 0x333344, 0.5, 0.3, 0); sm.rotation.y = Math.PI / 2; i.add(sm); // il davanti della macchina è verso +x
+  }
+  if (kind === 'gummy') {
+    f.color = pickOne([0xff5d73, 0x6bcb77, 0xffd93d, 0xff9a3d, 0xb46bff]);
+    const gm = toon(f.color, { transparent: true, opacity: 0.85, emissive: new THREE.Color(f.color).multiplyScalar(0.25).getHex() });
+    const i = animal('gummy', 0.7, 0.8);
+    i.add(ball(0.3, gm, 0, 0.38, 0, 1, 1.15, 0.85), ball(0.24, gm, 0, 0.8, 0.02));
+    [-1, 1].forEach((k) => { i.add(ball(0.09, gm, k * 0.17, 1.0, 0)); i.add(ball(0.1, gm, k * 0.27, 0.5, 0.05, 0.8, 1.1, 0.8)); i.add(ball(0.11, gm, k * 0.14, 0.08, 0.05, 1, 0.8, 1.1)); });
+    [-0.08, 0.08].forEach((x) => i.add(ball(0.035, 0x3b2a20, x, 0.84, 0.22)));
+    i.add(ball(0.05, 0x3b2a20, 0, 0.76, 0.25, 1.2, 0.8, 0.6));
+    i.add(smile(0.05, 0x3b2a20, 0, 0.7, 0.23));
+  }
   f.pos.y = f.flying ? 2 : 0;
   f.newTarget = () => { f.target.copy(randomSpot(0.6)); f.target.y = f.flying ? rand(1.4, 2.8) : 0; };
   f.newTarget();
@@ -1051,6 +1139,14 @@ function buildBarn() {
     g.add(mesh(BOX, WHITE, k * (W / 2 - 0.05), HW / 2, F, 0.1, HW, 0.05));
   });
   g.add(mesh(BOX, WHITE, 0, HW, F, W, 0.1, 0.05), mesh(BOX, WHITE, 0, 0.05, F, W, 0.1, 0.05));
+  // interno visibile quando la porta si apre: buio caldo, paglia e un pulcino che sbuca
+  const inside = new THREE.Group(); inside.position.set(0, 0, F - 0.012); g.add(inside);
+  inside.add(mesh(BOX, 0x3a1c14, 0, 0.7, 0, 1.2, 1.3, 0.01));
+  inside.add(mesh(BOX, 0x5a2c1e, 0, 1.3, 0.002, 1.2, 0.12, 0.01));
+  inside.add(ball(0.42, 0xf3c94a, -0.2, 0.1, 0.005, 1, 0.55, 0.02), ball(0.32, 0xe8b93a, 0.3, 0.08, 0.006, 1, 0.5, 0.02));
+  inside.add(ball(0.13, 0xffe14d, 0.12, 0.42, 0.01, 1, 1, 0.1), ball(0.1, 0xffe14d, 0.12, 0.58, 0.012, 1, 1, 0.1));
+  [-0.04, 0.04].forEach((x) => inside.add(ball(0.018, 0x222222, 0.12 + x, 0.6, 0.02, 1, 1, 0.2)));
+  inside.add(mesh(CONE, 0xff9a2a, 0.12, 0.555, 0.02, 0.025, 0.05, 0.01));
   // porta (si apre)
   const door = new THREE.Group(); door.position.set(-0.6, 0, F + 0.01); g.add(door);
   door.add(mesh(BOX, 0xa8322a, 0.6, 0.7, 0, 1.2, 1.3, 0.05));
@@ -1140,6 +1236,39 @@ function buildChest() {
   });
 }
 
+function buildCity() {
+  // strada che attraversa il parco
+  const roadZ = bounds.zMin + 1.4;
+  world.add(mesh(new THREE.PlaneGeometry(200, 1.9).rotateX(-Math.PI / 2), glow(0x6a6f80), 0, 0.05, roadZ));
+  [-0.98, 0.98].forEach((dz) => world.add(mesh(new THREE.PlaneGeometry(200, 0.12).rotateX(-Math.PI / 2), glow(0xdadde6), 0, 0.055, roadZ + dz)));
+  for (let x = -30; x < 30; x += 1.6) world.add(mesh(new THREE.PlaneGeometry(0.8, 0.1).rotateX(-Math.PI / 2), glow(0xffffff), x, 0.056, roadZ));
+  friends.push(...[1, -1].map((dir, k) => { const c = makeFriend('car'); c.dir = dir; c.lane = roadZ + (dir > 0 ? 0.45 : -0.45); c.pos.set(dir * rand(-3, 3), 0, c.lane); return c; }));
+  // palazzi colorati sullo sfondo
+  const cols = [0xff9a8a, 0x8ac8ff, 0xffd27a, 0xb8a0ff, 0x9be0a0, 0xffb0d0];
+  for (let i = 0; i < 12; i++) {
+    const x = -22 + i * 4 + rand(-0.5, 0.5), h = rand(3, 7), w = rand(2.4, 3.4), z = -19 - (i % 2) * 2;
+    const b = new THREE.Group(); b.position.set(x, 0, z); world.add(b);
+    b.add(mesh(BOX, cols[i % cols.length], 0, h / 2, 0, w, h, 2.2));
+    b.add(mesh(BOX, 0xffffff, 0, h + 0.08, 0, w + 0.15, 0.16, 2.35));
+    for (let r = 0; r < Math.floor(h / 1.1); r++) for (let c = -1; c <= 1; c++) b.add(mesh(BOX, glow(0xfff6c8), c * w * 0.28, 0.9 + r * 1.05, 1.11, 0.42, 0.5, 0.02));
+  }
+  // semaforo: toccalo e cambia colore
+  const tl = new THREE.Group(); const TX = bounds.xHalf * 0.55, TZ = roadZ - 1.3; tl.position.set(TX, 0, TZ);
+  tl.add(mesh(CYL, 0x55596a, 0, 1.1, 0, 0.07, 2.2, 0.07), mesh(BOX, 0x33363f, 0, 2.5, 0, 0.42, 1.1, 0.3));
+  const lights = [0xff4d4d, 0xffd23f, 0x4ddf6a].map((c, k) => { const l = ball(0.13, glow(0x222222), 0, 2.85 - k * 0.35, 0.16, 1, 1, 0.4); l.userData.on = c; tl.add(l); return l; });
+  let cur = 2; const show = () => lights.forEach((l, k) => (l.material = glow(k === cur ? l.userData.on : 0x3a3a3a)));
+  show();
+  addExtra(tl, new THREE.Vector3(TX, 2.4, TZ), 0.9, () => { cur = (cur + 1) % 3; show(); sfx.magic(); buzz(20); particles.burst(new THREE.Vector3(TX, 2.6, TZ + 0.3), [lights[cur].userData.on, 0xffffff], 12, 2, { up: 1, gravity: 1 }); });
+}
+function buildCandy() {
+  // colline di gelato e bastoncini giganti
+  [[-12, -22, 4, 0xffb0d8], [0, -26, 5, 0xc8a8ff], [12, -22, 4, 0xa8e8ff]].forEach(([x, z, r, c]) => {
+    world.add(ball(r, c, x, 0, z, 1.2, 0.8, 1));
+    for (let i = 0; i < 6; i++) world.add(ball(r * 0.12, glow(PALETTE[i]), x + Math.cos(i) * r * 0.7, r * 0.55, z + Math.sin(i) * r * 0.3 + r * 0.5));
+    world.add(ball(r * 0.18, 0xff3b5c, x, r * 0.85, z));
+  });
+}
+
 // ================================================================ i mondi
 const THEMES = [
   {
@@ -1151,6 +1280,11 @@ const THEMES = [
     id: 'fattoria', sky: ['#5ab8ff', '#b4e0ff', '#fff6dc'], fog: [0xeaf6ff, 35, 80], ground: 0x8ed45e, patches: [0xa3e070, 0xc8a26a],
     hills: [0x6cc94e, 0x7fd65b, 0x5cbf4a], light: [0xffffff, 0x99cc77, 1.6, 1.8], skyObj: 'sun', skipTrees: [6, 7], extra: buildBarn,
     tree: () => meadowTree(), fruit: 'pear', collect: 'egg', floater: 'balloon', friend: ['cow', 'pig', 'sheep'], sprout: 'carrot', fade: '#b4e0ff',
+  },
+  {
+    id: 'citta', sky: ['#5ab8ff', '#b4e0ff', '#f2f8ff'], fog: [0xe8f4ff, 35, 85], ground: 0x9fd47a, patches: [0xb2e08a, 0x8cc86a],
+    light: [0xffffff, 0x99bb88, 1.6, 1.8], skyObj: 'sun', skipTrees: [1, 2, 6, 7], extra: buildCity,
+    tree: () => cityTree(), fruit: 'apple', collect: 'icecream', floater: 'balloon', friend: [], sprout: 'flowerpot', fade: '#b4e0ff',
   },
   {
     id: 'mare', tune: 'acqua', sky: ['#38b6ff', '#9fe0ff', '#fff4d6'], fog: [0xfff4d6, 35, 80], ground: 0xf5d98b, patches: [0xfbe6a8, 0xeccb74],
@@ -1171,6 +1305,11 @@ const THEMES = [
     id: 'dinosauri', sky: ['#5fb0e8', '#b5e2f5', '#fff0d0'], fog: [0xf4f0dc, 35, 85], ground: 0x9bcf55, patches: [0xb0dd6a, 0x86bb48],
     hills: [0x6f9e3c, 0x7fae48, 0x5f8e34], light: [0xffffff, 0xa0c070, 1.6, 1.8], skyObj: 'sun', prints: 0x6f9a3c, extra: buildVolcano, skipTrees: [1, 6], noClouds: true,
     tree: () => palmTree(), fruit: 'banana', collect: 'bone', floater: 'balloon', friend: ['dino', 'dino'], sprout: 'fern', fade: '#b5e2f5',
+  },
+  {
+    id: 'dolci', sky: ['#ff9ad5', '#ffc8ec', '#fff0fa'], fog: [0xffe4f4, 35, 85], ground: 0xffc8e4, patches: [0xffdaee, 0xffb4da],
+    light: [0xffffff, 0xffc0e0, 1.6, 1.7], skyObj: 'sun', extra: buildCandy,
+    tree: () => lollipopTree(), fruit: 'candy', collect: 'cupcake', floater: 'balloon', friend: ['gummy', 'gummy'], sprout: 'sweet', fade: '#ffc8ec',
   },
   {
     id: 'notte', tune: 'ninna', sky: ['#0b1440', '#23306e', '#3b3f86'], fog: [0x1d2658, 22, 60], ground: 0x2e6650, patches: [0x367560, 0x285a47],
@@ -1451,6 +1590,17 @@ function updateFriend(f, dt) {
     f.g.rotation.z = f.actT > 0 ? (1 - f.actT / 0.8) * Math.PI * 4 : 0;
     if (f.halo) f.halo.material.opacity = 0.45 + Math.sin(f.t * 4) * 0.3 + (f.actT > 0 ? 0.3 : 0);
   } else {
+    if (f.drive) {
+      f.pos.x += f.dir * 1.6 * dt; f.pos.z = f.lane;
+      const lim = bounds.xHalf + 3;
+      if (f.pos.x > lim) f.pos.x = -lim; if (f.pos.x < -lim) f.pos.x = lim;
+      f.g.rotation.y = f.dir > 0 ? 0 : Math.PI;
+      f.wheels.forEach((w) => (w.rotation.y -= dt * 8));
+      f.inner.position.y = f.actT > 0 ? Math.sin((1 - f.actT) * Math.PI) * f.hop : Math.abs(Math.sin(f.t * 10)) * 0.02;
+      f.g.position.set(f.pos.x, 0, f.pos.z);
+      f.shadow.position.set(f.pos.x, SHY, f.pos.z);
+      return;
+    }
     if (f.follow) { // i pulcini seguono Leo come la mamma
       const dl = Math.hypot(leo.pos.x - f.pos.x, leo.pos.z - f.pos.z);
       if (dl > 1.6 || leo.moving) { f.target.set(leo.pos.x + f.off.x, 0, leo.pos.z + f.off.z); clampToBounds(f.target); }
@@ -1470,7 +1620,7 @@ function updateFriend(f, dt) {
       f.claws.forEach((c, i) => (c.rotation.z = (i ? -1 : 1) * (dance ? 0.6 + Math.sin(f.t * 20) * 0.5 : Math.sin(f.t * 3) * 0.15)));
       f.g.rotation.y = 0;
     } else { // pinguino: dondola camminando, scivola di pancia se lo tocchi
-      if (walking) f.g.rotation.y = angleLerp(f.g.rotation.y, clamp(Math.atan2(f.target.x - f.pos.x, f.target.z - f.pos.z), -1.25, 1.25), dt * 6);
+      if (walking) f.g.rotation.y = angleLerp(f.g.rotation.y, Math.atan2(f.target.x - f.pos.x, f.target.z - f.pos.z), dt * 6);
       else f.g.rotation.y = angleLerp(f.g.rotation.y, 0, dt * 3);
       f.inner.rotation.x = lerp(f.inner.rotation.x, sliding ? 1.35 : 0, dt * 10);
       f.inner.position.y = sliding ? 0.35 : f.hop && f.actT > 0 ? Math.sin((1 - f.actT) * Math.PI) * f.hop : 0;
