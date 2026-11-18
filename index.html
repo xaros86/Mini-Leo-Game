@@ -45,45 +45,114 @@
 
     /* Musica on/off: serve una pressione lunga (così il bimbo non la spegne per sbaglio) */
     #music {
-      position: fixed; top: max(14px, env(safe-area-inset-top)); right: 12px;
+      position: fixed; top: max(14px, env(safe-area-inset-top)); left: 12px;
       width: 40px; height: 40px; border-radius: 50%;
       background: rgba(255,255,255,0.45); color: #6a5acd;
       font: bold 22px/40px sans-serif; text-align: center;
-      opacity: .55; transition: opacity .2s, transform .2s;
+      opacity: .55; transition: opacity .2s, transform .2s; z-index: 5;
     }
     #music.off { text-decoration: line-through; opacity: .35; }
     #music.press { transform: scale(1.25); opacity: .9; }
+
+    /* Casetta: tenendola premuta 2 secondi si torna al menù (il cerchio giallo si riempie) */
+    #home {
+      --p: 0;
+      position: fixed; top: max(10px, env(safe-area-inset-top)); right: 10px;
+      width: 52px; height: 52px; border-radius: 50%;
+      background: conic-gradient(#ffd23f calc(var(--p) * 360deg), rgba(255,255,255,0.5) 0);
+      display: none; align-items: center; justify-content: center;
+      transition: transform .2s; z-index: 5;
+    }
+    #home.show { display: flex; }
+    #home.press { transform: scale(1.2); }
+    #home svg { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.85); padding: 3px; box-sizing: border-box; }
 
     /* Passaggio da un mondo all'altro */
     #wipe { position: fixed; inset: 0; opacity: 0; pointer-events: none; transition: opacity .6s ease; }
     #wipe.on { opacity: 1; }
 
-    /* Schermata iniziale: un solo grande bottone */
-    #start {
-      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-      background: rgba(110,198,255,0.35);
-      transition: opacity .5s;
+    /* Menù iniziale: tre bottoni grandi, uno per minigioco */
+    #menu {
+      position: fixed; inset: 0; z-index: 4;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2vh;
+      background: radial-gradient(circle at 50% 40%, rgba(255,255,255,0.55), rgba(140,200,255,0.55));
+      transition: opacity .45s;
     }
-    #start.hide { opacity: 0; pointer-events: none; }
-    #play {
-      width: 170px; height: 170px; border-radius: 50%;
-      background: #5ccf5c; border: 10px solid #fff;
-      box-shadow: 0 10px 0 #3a9e3a, 0 14px 30px rgba(0,0,0,.25);
-      display: flex; align-items: center; justify-content: center;
-      animation: breathe 1.2s ease-in-out infinite alternate;
+    #menu.hide { opacity: 0; pointer-events: none; }
+    #menu h1 {
+      margin: 0; font: 900 clamp(28px, 7vmin, 56px) / 1 "Trebuchet MS", system-ui, sans-serif;
+      color: #fff; letter-spacing: 1px;
+      text-shadow: 0 3px 0 #f5892b, 0 6px 12px rgba(0,0,0,0.18);
     }
-    #play::after {
-      content: ""; margin-left: 18px;
-      border-left: 62px solid #fff; border-top: 40px solid transparent; border-bottom: 40px solid transparent;
+    .games { display: flex; flex-direction: column; gap: 3vh; align-items: center; }
+    .game {
+      --s: min(24vh, 58vw);
+      width: var(--s); height: var(--s); border-radius: 50%;
+      border: calc(var(--s) * 0.045) solid #fff; box-sizing: border-box;
+      box-shadow: 0 calc(var(--s) * 0.05) 0 rgba(0,0,0,0.12), 0 10px 30px rgba(0,0,0,0.15);
+      overflow: hidden; animation: breathe 1.6s ease-in-out infinite alternate;
     }
-    @keyframes breathe { from { transform: scale(1); } to { transform: scale(1.1); } }
+    .game:nth-child(2) { animation-delay: .5s; }
+    .game:nth-child(3) { animation-delay: 1s; }
+    .game svg { width: 100%; height: 100%; display: block; }
+    .game.soon { filter: saturate(.85); }
+    .game.nope { animation: nope .5s ease; }
+    .game.go { animation: go .35s ease forwards; }
+    @media (orientation: landscape) {
+      .games { flex-direction: row; gap: 5vw; }
+      .game { --s: min(26vw, 56vh); }
+    }
+    @keyframes breathe { from { transform: scale(1); } to { transform: scale(1.06); } }
+    @keyframes nope { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-10deg); } 40% { transform: rotate(9deg); } 60% { transform: rotate(-6deg); } 80% { transform: rotate(4deg); } }
+    @keyframes go { to { transform: scale(1.25); opacity: .6; } }
   </style>
 </head>
 <body>
   <div id="hud"></div>
   <div id="music">&#9835;</div>
+  <div id="home"><svg viewBox="0 0 40 40" aria-label="Menù"><path d="M20 7 5 19h4v13h8v-8h6v8h8V19h4z" fill="#ff7a4d" stroke="#d9572b" stroke-width="2" stroke-linejoin="round"/><rect x="17" y="24" width="6" height="8" fill="#8a4a2a"/></svg></div>
   <div id="wipe"></div>
-  <div id="start"><div id="play"></div></div>
+  <div id="menu">
+    <h1>Mini Leo</h1>
+    <div class="games">
+      <div class="game" id="g1"><svg viewBox="0 0 200 200" aria-label="Il prato di Leo">
+        <defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5ec0ff"/><stop offset="1" stop-color="#c8ecff"/></linearGradient></defs>
+        <rect width="200" height="200" fill="url(#sk)"/>
+        <circle cx="160" cy="38" r="17" fill="#ffd93d"/><circle cx="160" cy="38" r="24" fill="#ffd93d" opacity=".3"/>
+        <ellipse cx="100" cy="205" rx="150" ry="70" fill="#7fd65b"/><ellipse cx="40" cy="190" rx="70" ry="40" fill="#95e36b"/>
+        <g transform="translate(100 98)">
+          <g fill="#f5892b">
+            <circle cx="0" cy="-58" r="20"/><circle cx="29" cy="-50" r="20"/><circle cx="50" cy="-29" r="20"/><circle cx="58" cy="0" r="20"/><circle cx="50" cy="29" r="20"/><circle cx="29" cy="50" r="20"/>
+            <circle cx="0" cy="58" r="20"/><circle cx="-29" cy="50" r="20"/><circle cx="-50" cy="29" r="20"/><circle cx="-58" cy="0" r="20"/><circle cx="-50" cy="-29" r="20"/><circle cx="-29" cy="-50" r="20"/>
+          </g>
+          <circle cx="-34" cy="-38" r="13" fill="#ffc94a"/><circle cx="34" cy="-38" r="13" fill="#ffc94a"/>
+          <circle cx="-34" cy="-38" r="6" fill="#ff8fa3"/><circle cx="34" cy="-38" r="6" fill="#ff8fa3"/>
+          <circle r="47" fill="#ffc94a"/>
+          <ellipse cx="-17" cy="-7" rx="11" ry="13" fill="#fff"/><ellipse cx="17" cy="-7" rx="11" ry="13" fill="#fff"/>
+          <ellipse cx="-16" cy="-5" rx="7" ry="8.5" fill="#3b2a20"/><ellipse cx="18" cy="-5" rx="7" ry="8.5" fill="#3b2a20"/>
+          <circle cx="-13.5" cy="-9" r="2.6" fill="#fff"/><circle cx="20.5" cy="-9" r="2.6" fill="#fff"/>
+          <ellipse cx="-31" cy="12" rx="8" ry="5" fill="#ff8fa3"/><ellipse cx="31" cy="12" rx="8" ry="5" fill="#ff8fa3"/>
+          <ellipse cx="0" cy="17" rx="19" ry="13" fill="#fff0c4"/>
+          <ellipse cx="0" cy="9" rx="7" ry="5" fill="#3b2a20"/>
+          <path d="M-9 20q9 9 18 0" stroke="#3b2a20" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        </g>
+        <g transform="translate(36 168)"><ellipse rx="15" ry="12" fill="#ff3b3b"/><path d="M0-12v24" stroke="#222" stroke-width="2"/><circle cx="-6" cy="-3" r="2.6" fill="#222"/><circle cx="6" cy="-3" r="2.6" fill="#222"/><circle cx="-5" cy="6" r="2.3" fill="#222"/><circle cx="5" cy="6" r="2.3" fill="#222"/><circle cy="-13" r="6" fill="#222"/></g>
+        <g transform="translate(166 160)"><path d="M0 0v26" stroke="#3d9e3a" stroke-width="4"/><g fill="#ff7bd5"><circle cx="0" cy="-10" r="7"/><circle cx="9.5" cy="-3" r="7"/><circle cx="6" cy="8" r="7"/><circle cx="-6" cy="8" r="7"/><circle cx="-9.5" cy="-3" r="7"/></g><circle r="6" fill="#ffe45c"/></g>
+      </svg></div>
+      <div class="game soon" id="g2"><svg viewBox="0 0 200 200" aria-label="Presto un nuovo gioco">
+        <rect width="200" height="200" fill="#c9b8ff"/>
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#fff" stroke-width="7" stroke-dasharray="14 14" stroke-linecap="round" opacity=".85"/>
+        <path d="M100 52q6 42 48 48q-42 6-48 48q-6-42-48-48q42-6 48-48z" fill="#fff3a0"/>
+        <circle cx="146" cy="58" r="6" fill="#fff"/><circle cx="56" cy="146" r="5" fill="#fff"/>
+      </svg></div>
+      <div class="game soon" id="g3"><svg viewBox="0 0 200 200" aria-label="Presto un nuovo gioco">
+        <rect width="200" height="200" fill="#ffc9a8"/>
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#fff" stroke-width="7" stroke-dasharray="14 14" stroke-linecap="round" opacity=".85"/>
+        <path d="M100 52q6 42 48 48q-42 6-48 48q-6-42-48-48q42-6 48-48z" fill="#ffffff"/>
+        <circle cx="146" cy="58" r="6" fill="#fff"/><circle cx="56" cy="146" r="5" fill="#fff"/>
+      </svg></div>
+    </div>
+  </div>
   <script type="module" src="js/main.js"></script>
   <script>
     if ('serviceWorker' in navigator && location.hostname !== 'appassets.androidplatform.net') {

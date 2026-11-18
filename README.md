@@ -2,7 +2,15 @@
 
 Un piccolo gioco 3D (three.js) per bimbi di 2–3 anni. Si gioca con **un dito**, anche con il telefono appoggiato sul tavolo, in verticale o in orizzontale. Niente testi, niente sconfitte, niente pubblicità: solo colori e suoni allegri.
 
-## Come si gioca
+## Menù
+All'avvio c'è un menù con **3 grandi bottoni**, uno per minigioco:
+1. 🦁 **Il prato di Leo** (descritto qui sotto)
+2. ✨ in arrivo
+3. ✨ in arrivo
+
+Nel gioco, la **casetta in alto a destra** riporta al menù: va **tenuta premuta 2 secondi** (si riempie un cerchio giallo), così il bimbo non esce per sbaglio. Il bottoncino ♫ della musica ora è in alto a sinistra.
+
+## Il prato di Leo: come si gioca
 - **Tocca il terreno** → nasce qualcosa (fiore, carota, castello di sabbia, corallo, pupazzo di neve, felce, funghetto, cristallo…) con una nota musicale, e Leo corre lì saltellando.
 - **Tocca ciò che vola** → palloncini, bolle e meduse scoppiano, i dischi volanti fanno scintille, le lanterne diventano fuochi d'artificio.
 - **Tocca gli amici** → ognuno fa la sua magia: la mucca muggisce, il maiale grugnisce, la pecora bela, i pulcini pigolano (e seguono Leo come la mamma!), i dinosauri ruggiscono, gli alieni fanno salti altissimi, i pesci fanno bolle, i granchi ballano, i pinguini scivolano.
@@ -49,8 +57,17 @@ In locale: `python3 -m http.server` nella cartella e apri `http://localhost:8000
 ### Consiglio per i genitori 🔒
 Per evitare che il bimbo esca dal gioco, usa il **Blocco app sullo schermo** (Impostazioni → Sicurezza → Blocco app / "App pinning"): l'app resta fissa finché non la sblocchi tu. Lo schermo resta acceso durante il gioco.
 
-## Struttura
-- `index.html` – pagina, barra delle stelle, bottone di avvio
-- `js/main.js` – tutto il gioco (scena, Leo, palloncini, stelle, farfalle, fiori, suoni sintetizzati con Web Audio)
-- `js/vendor/three.module.min.js` – three.js r170 (incluso, così funziona offline)
-- `manifest.webmanifest`, `sw.js`, `icons/` – installazione e funzionamento offline
+## Struttura del codice
+- `index.html` – pagina: menù, casetta, barra degli oggetti, bottone musica
+- `js/main.js` – menù principale: sceglie il minigioco, gestisce tocchi, schermo intero, musica, casetta
+- `js/shared/leo.js` – **Leo il leoncino** (modello e animazioni), da riusare in ogni minigioco: `createLeo({ parent: scene })`
+- `js/shared/audio.js` – musica a carillon e suoni
+- `js/shared/toon.js` – stile cartone animato: materiali, forme base, ombre
+- `js/shared/utils.js` – piccole utilità
+- `js/games/prato.js` – minigioco 1, "Il prato di Leo" (10 mondi)
+- `js/vendor/three.module.min.js` – three.js r170 (incluso, funziona offline)
+- `android/` – progetto Android (WebView) per l'APK
+- `manifest.webmanifest`, `sw.js`, `icons/` – installazione come web app e funzionamento offline
+
+### Aggiungere un minigioco
+Crea `js/games/nome.js` che esporta `game` con `init(renderer)`, `resize()`, `enter()`, `exit()`, `tap(x, y)`, `frame(dt, time)` e mettilo al posto di un `null` nell'elenco `GAMES` in `js/main.js`; poi cambia l'icona del bottone corrispondente in `index.html`.
