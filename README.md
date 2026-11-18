@@ -3,20 +3,29 @@
 Un piccolo gioco 3D (three.js) per bimbi di 2–3 anni. Si gioca con **un dito**, anche con il telefono appoggiato sul tavolo, in verticale o in orizzontale. Niente testi, niente sconfitte, niente pubblicità: solo colori e suoni allegri.
 
 ## Come si gioca
-- **Tocca il terreno** → nasce qualcosa (fiore, castello di sabbia, pupazzo di neve, funghetto luminoso…) con una nota musicale, e Leo corre lì saltellando.
-- **Tocca ciò che vola** → palloncini e bolle scoppiano, le lanterne della notte diventano fuochi d'artificio.
-- **Tocca gli amici** → le farfalle e le lucciole fanno una capriola, i granchi ballano, i pinguini scivolano di pancia.
-- **Tocca un albero** → cade un frutto (mela, cocco, biscotto, mela d'oro) e Leo corre a mangiarlo.
-- **Tocca Leo** → salta, fa la giravolta e ride.
-- **Porta Leo sulle 5 cose da raccogliere** (stelle, stelle marine, regali, stelle luminose): festa con arcobaleno e coriandoli, poi Leo parte per il mondo successivo.
+- **Tocca il terreno** → nasce qualcosa (fiore, carota, castello di sabbia, corallo, pupazzo di neve, felce, funghetto, cristallo…) con una nota musicale, e Leo corre lì saltellando.
+- **Tocca ciò che vola** → palloncini, bolle e meduse scoppiano, i dischi volanti fanno scintille, le lanterne diventano fuochi d'artificio.
+- **Tocca gli amici** → ognuno fa la sua magia: la mucca muggisce, il maiale grugnisce, la pecora bela, i pulcini pigolano (e seguono Leo come la mamma!), i dinosauri ruggiscono, gli alieni fanno salti altissimi, i pesci fanno bolle, i granchi ballano, i pinguini scivolano.
+- **Tocca un albero** → cade un frutto e Leo corre a mangiarlo.
+- **Tocca il pallone** → Leo corre a calciarlo.
+- **Tocca il cielo** → il sole ride e fa ballare i fiori, la luna e il pianeta fanno cadere stelle cadenti, le nuvole fanno piovere (o nevicare) e nascono cose nuove.
+- **Tocca Leo** → salta e ride. Ma se lo tocchi troppe volte… gli gira la testa!
+- **Scenografie a sorpresa**: il fienile si apre ed escono pulcini, il forziere si apre pieno di tesori, il vulcano erutta, il razzo decolla e torna giù.
+- **Porta Leo sulle 5 cose da raccogliere**: festa con arcobaleno (o fuochi d'artificio), poi Leo parte per il mondo successivo.
 
-### I 4 mondi
-1. **Prato** – stelle, palloncini, farfalle, meli
-2. **Spiaggia** – stelle marine, bolle di sapone, granchi, palme (Leo ha gli occhiali da sole)
-3. **Neve** – regali, palloncini, pinguini, abeti, neve che cade (Leo ha il berretto)
-4. **Notte** – stelle luminose, lanterne-fuochi d'artificio, lucciole, luna che dorme
+### Gli 8 mondi
+| # | Mondo | Da raccogliere | Amici | Sorpresa |
+|---|---|---|---|---|
+| 0 | 🌳 Prato | stelle | farfalle | nuvole che piovono |
+| 1 | 🐄 Fattoria | uova | mucca, maiale, pecora, pulcini | il fienile |
+| 2 | 🏖️ Spiaggia | stelle marine | granchi | impronte nella sabbia, occhiali da sole |
+| 3 | 🐠 Fondale | perle | pesci, granchio, meduse | il forziere, maschera da sub |
+| 4 | ❄️ Neve | regali | pinguini | neve che cade, berretto |
+| 5 | 🦕 Dinosauri | uova di dino | dinosauri | il vulcano |
+| 6 | 🌙 Notte | stelle luminose | lucciole | lanterne-fuochi d'artificio |
+| 7 | 🚀 Spazio | pianetini | alieni, dischi volanti | gravità leggera, il razzo, casco da astronauta |
 
-Poi si ricomincia dal prato. Per provare un mondo: `index.html?mondo=2` (0–3).
+In ogni mondo ci sono anche il pallone e gli alberi con i frutti. Dopo lo spazio si ricomincia dal prato. Per provare un mondo: `index.html?mondo=5` (0–7).
 
 ## Installarlo su Android come APK
 A ogni aggiornamento GitHub crea l'APK da solo (workflow `Crea APK Android`). Per scaricarlo dal telefono:
