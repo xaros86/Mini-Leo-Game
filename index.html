@@ -32,7 +32,7 @@
       box-shadow: 0 4px 0 rgba(0,0,0,0.08);
     }
     #hud svg { width: 40px; height: 40px; transition: transform .2s; }
-    #hud svg path { fill: rgba(255,255,255,0.9); stroke: #c9b9e6; stroke-width: 3; stroke-linejoin: round; transition: fill .2s; }
+    #hud svg path { fill-rule: evenodd; fill: rgba(255,255,255,0.9); stroke: #c9b9e6; stroke-width: 3; stroke-linejoin: round; transition: fill .2s; }
     #hud svg.on path { fill: var(--on-fill, #ffd23f); stroke: var(--on-stroke, #f0a500); }
     #hud.night { background: rgba(255,255,255,0.22); }
     #hud.night svg path { fill: rgba(255,255,255,0.25); stroke: #8f9bd6; }
@@ -42,6 +42,17 @@
     #hud.party svg:nth-child(2n) { animation-delay: .25s; }
     @keyframes pop { 0% { transform: scale(.2); } 100% { transform: scale(1); } }
     @keyframes dance { from { transform: translateY(0) rotate(-12deg) scale(1.1); } to { transform: translateY(-6px) rotate(12deg) scale(1.2); } }
+
+    /* Musica on/off: serve una pressione lunga (così il bimbo non la spegne per sbaglio) */
+    #music {
+      position: fixed; top: max(14px, env(safe-area-inset-top)); right: 12px;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255,255,255,0.45); color: #6a5acd;
+      font: bold 22px/40px sans-serif; text-align: center;
+      opacity: .55; transition: opacity .2s, transform .2s;
+    }
+    #music.off { text-decoration: line-through; opacity: .35; }
+    #music.press { transform: scale(1.25); opacity: .9; }
 
     /* Passaggio da un mondo all'altro */
     #wipe { position: fixed; inset: 0; opacity: 0; pointer-events: none; transition: opacity .6s ease; }
@@ -70,6 +81,7 @@
 </head>
 <body>
   <div id="hud"></div>
+  <div id="music">&#9835;</div>
   <div id="wipe"></div>
   <div id="start"><div id="play"></div></div>
   <script type="module" src="js/main.js"></script>

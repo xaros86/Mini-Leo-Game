@@ -11,17 +11,22 @@ Un piccolo gioco 3D (three.js) per bimbi di 2–3 anni. Si gioca con **un dito**
 - **Tocca il cielo** → il sole ride e fa ballare i fiori, la luna e il pianeta fanno cadere stelle cadenti, le nuvole fanno piovere (o nevicare) e nascono cose nuove.
 - **Tocca Leo** → salta e ride. Ma se lo tocchi troppe volte… gli gira la testa!
 - **Scenografie a sorpresa**: il fienile si apre ed escono pulcini, il forziere si apre pieno di tesori, il vulcano erutta, il razzo decolla e torna giù.
-- **Porta Leo sulle 5 cose da raccogliere**: festa con arcobaleno (o fuochi d'artificio), poi Leo parte per il mondo successivo.
+- **Porta Leo sulla cosa da raccogliere**: ne compare **una alla volta** (luccica per farsi notare). Se non la prende entro 15 secondi sparisce e ricompare poco dopo da un'altra parte. Dopo **5** arriva la festa con arcobaleno (o fuochi d'artificio) e Leo parte per il mondo successivo.
+
+### Musica e suoni
+- Sottofondo a **carillon**, dolce e a basso volume: allegro di giorno, "acquatico" su spiaggia, fondale e neve, una ninna nanna di notte e nello spazio.
+- Pochi effetti sonori, morbidi e intonati con la musica: solo per palloncini/bolle, amici, Leo, raccolta, festa e sorprese. **Toccare il terreno non fa rumore.**
+- **Musica on/off**: tieni premuto per un secondo il bottoncino ♫ in alto a destra (una pressione breve non fa nulla, così il bimbo non la spegne per sbaglio).
 
 ### Gli 8 mondi
 | # | Mondo | Da raccogliere | Amici | Sorpresa |
 |---|---|---|---|---|
-| 0 | 🌳 Prato | stelle | farfalle | nuvole che piovono |
+| 0 | 🌳 Prato | coccinelle | farfalle | nuvole che piovono |
 | 1 | 🐄 Fattoria | uova | mucca, maiale, pecora, pulcini | il fienile |
 | 2 | 🏖️ Spiaggia | stelle marine | granchi | impronte nella sabbia, occhiali da sole |
 | 3 | 🐠 Fondale | perle | pesci, granchio, meduse | il forziere, maschera da sub |
 | 4 | ❄️ Neve | regali | pinguini | neve che cade, berretto |
-| 5 | 🦕 Dinosauri | uova di dino | dinosauri | il vulcano |
+| 5 | 🦕 Dinosauri | ossa | dinosauri | il vulcano |
 | 6 | 🌙 Notte | stelle luminose | lucciole | lanterne-fuochi d'artificio |
 | 7 | 🚀 Spazio | pianetini | alieni, dischi volanti | gravità leggera, il razzo, casco da astronauta |
 

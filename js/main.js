@@ -15,83 +15,126 @@ const angleLerp = (a, b, t) => { let d = b - a; while (d > Math.PI) d -= Math.PI
 
 const PALETTE = [0xff5d73, 0xffa62b, 0xffd93d, 0x6bcb77, 0x4d96ff, 0xb46bff, 0xff7bd5, 0x3fd2c7];
 
-// ---------------------------------------------------------------- suoni (sintetizzati, nessun file)
+// ---------------------------------------------------------------- musica e suoni (tutto sintetizzato, nessun file)
+// Tutti i suoni sono note "carillon" nella stessa tonalità della musica (do maggiore pentatonico):
+// così anche tanti tocchi insieme restano armoniosi. Toccare il prato NON fa suoni.
 const PENTA = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5, 1174.66, 1318.5];
+const N = (n) => 261.63 * Math.pow(2, n / 12); // nota: semitoni dal do centrale
 const sfx = {
-  ctx: null, master: null, noiseBuf: null,
+  ctx: null, fx: null, mus: null, last: {}, lastAny: 0,
   init() {
     if (!this.ctx) {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return;
-      this.ctx = new AC();
-      this.master = this.ctx.createGain();
-      this.master.gain.value = 0.7;
-      const comp = this.ctx.createDynamicsCompressor();
-      this.master.connect(comp).connect(this.ctx.destination);
-      const len = this.ctx.sampleRate * 0.6;
-      this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
-      const d = this.noiseBuf.getChannelData(0);
-      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      const ctx = this.ctx = new AC();
+      const comp = ctx.createDynamicsCompressor(); comp.connect(ctx.destination);
+      const soft = ctx.createBiquadFilter(); soft.type = 'lowpass'; soft.frequency.value = 3800; soft.connect(comp);
+      const bus = ctx.createGain(); bus.gain.value = 0.9; bus.connect(soft);
+      // un po' di riverbero: suono più morbido, "da cameretta"
+      const len = ctx.sampleRate * 1.6, ir = ctx.createBuffer(2, len, ctx.sampleRate);
+      for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3); }
+      const rev = ctx.createConvolver(); rev.buffer = ir;
+      const wet = ctx.createGain(); wet.gain.value = 0.22; bus.connect(rev).connect(wet).connect(soft);
+      this.fx = ctx.createGain(); this.fx.gain.value = 1; this.fx.connect(bus);
+      this.mus = ctx.createGain(); this.mus.gain.value = 0; this.mus.connect(bus);
     }
     if (this.ctx.state === 'suspended') this.ctx.resume();
   },
-  tone(freq, dur, { type = 'sine', vol = 0.25, slide = null, delay = 0 } = {}) {
+  // limita i suoni: lo stesso suono non si ripete troppo in fretta, e mai due suoni nello stesso istante
+  ok(name, gap = 0.3) {
+    if (!this.ctx) return false;
+    const t = this.ctx.currentTime;
+    if (t - (this.last[name] ?? -9) < gap || t - this.lastAny < 0.08) return false;
+    this.last[name] = t; this.lastAny = t; return true;
+  },
+  note(f, { delay = 0, vol = 0.08, dur = 0.7, type = 'sine', slide = null, out = null, bright = 0.25 } = {}) {
     if (!this.ctx) return;
-    const t = this.ctx.currentTime + delay;
-    const o = this.ctx.createOscillator();
-    const g = this.ctx.createGain();
-    o.type = type;
-    o.frequency.setValueAtTime(freq, t);
-    if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+    const ctx = this.ctx, t = ctx.currentTime + delay;
+    const g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.008);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g).connect(this.master);
-    o.start(t); o.stop(t + dur + 0.05);
+    g.connect(out || this.fx);
+    [[1, 1], [2, bright]].forEach(([m, v]) => {
+      if (!v) return;
+      const o = ctx.createOscillator(); o.type = m === 1 ? type : 'sine';
+      o.frequency.setValueAtTime(f * m, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(slide * m, t + dur * 0.8);
+      const gg = ctx.createGain(); gg.gain.value = v;
+      o.connect(gg).connect(g); o.start(t); o.stop(t + dur + 0.05);
+    });
   },
-  noise(dur, vol, freq = 1800, delay = 0, q = 0.8) {
-    if (!this.ctx) return;
-    const t = this.ctx.currentTime + delay;
-    const s = this.ctx.createBufferSource();
-    s.buffer = this.noiseBuf;
-    const f = this.ctx.createBiquadFilter();
-    f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
-    const g = this.ctx.createGain();
-    g.gain.setValueAtTime(vol, t);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    s.connect(f).connect(g).connect(this.master);
-    s.start(t); s.stop(t + dur);
+  arp(notes, step = 0.09, opt = {}) { notes.forEach((f, i) => this.note(f, { ...opt, delay: (opt.delay || 0) + i * step })); },
+
+  // --- i pochi suoni del gioco
+  pop() { if (this.ok('pop', 0.15)) { this.note(pickOne([PENTA[5], PENTA[6], PENTA[7]]), { vol: 0.09, dur: 0.4 }); this.note(900, { slide: 450, vol: 0.04, dur: 0.12, bright: 0 }); } },
+  sparkle() { if (this.ok('sparkle')) this.arp([PENTA[4], PENTA[5], PENTA[7]].map((f) => f), 0.07, { vol: 0.06, dur: 0.6 }); },
+  collect() { if (this.ok('collect', 0.2)) this.arp([PENTA[2], PENTA[4], PENTA[5]], 0.1, { vol: 0.1, dur: 0.8 }); },
+  slot(i) { this.note(PENTA[Math.min(7, i + 3)], { vol: 0.08, dur: 1.0, delay: 0.05 }); },
+  leo() { if (this.ok('leo', 0.4)) { this.note(N(7), { slide: N(19), vol: 0.07, dur: 0.25, type: 'triangle', bright: 0 }); this.arp([N(19), N(24)], 0.12, { vol: 0.06, dur: 0.5, delay: 0.15 }); } },
+  dizzy() { if (this.ok('dizzy', 1)) this.arp([N(24), N(21), N(19), N(16), N(14)], 0.12, { vol: 0.07, dur: 0.5, type: 'triangle', bright: 0.1 }); },
+  munch() { if (this.ok('munch', 0.6)) { this.note(N(7), { vol: 0.08, dur: 0.18, type: 'triangle' }); this.note(N(7), { vol: 0.08, dur: 0.18, type: 'triangle', delay: 0.22 }); this.note(N(19), { vol: 0.07, dur: 0.6, delay: 0.5 }); } },
+  magic() { if (this.ok('magic', 0.8)) this.arp([N(12), N(16), N(19), N(24), N(28)], 0.08, { vol: 0.06, dur: 0.7 }); },
+  travel() { this.arp([N(12), N(14), N(16), N(19), N(21), N(24), N(26), N(28)], 0.07, { vol: 0.05, dur: 0.6 }); },
+  // ogni amico ha il suo piccolo motivo
+  voice(kind) {
+    if (!this.ok('v-' + kind, 0.6)) return;
+    const V = {
+      cow: () => this.arp([N(-5), N(-12)], 0.3, { vol: 0.1, dur: 0.6, type: 'triangle', bright: 0.1 }),
+      pig: () => this.arp([N(4), N(0), N(4)], 0.1, { vol: 0.08, dur: 0.2, type: 'triangle' }),
+      sheep: () => this.arp([N(7), N(7), N(7)], 0.11, { vol: 0.07, dur: 0.18 }),
+      chick: () => this.arp([N(31), N(36)], 0.1, { vol: 0.06, dur: 0.18, bright: 0 }),
+      dino: () => this.note(N(-5), { slide: N(-12), vol: 0.11, dur: 0.5, type: 'triangle', bright: 0.15 }),
+      alien: () => { this.note(N(12), { slide: N(24), vol: 0.07, dur: 0.3, bright: 0 }); this.note(N(24), { slide: N(19), vol: 0.07, dur: 0.3, delay: 0.3, bright: 0 }); },
+      fish: () => this.arp([N(16), N(21)], 0.09, { vol: 0.06, dur: 0.25, slide: null, bright: 0 }),
+      crab: () => this.arp([N(24), N(24), N(28)], 0.1, { vol: 0.06, dur: 0.12 }),
+      penguin: () => this.note(N(12), { slide: N(28), vol: 0.07, dur: 0.5, bright: 0 }),
+      butterfly: () => this.arp([N(28), N(31), N(33)], 0.06, { vol: 0.05, dur: 0.4 }),
+      firefly: () => this.arp([N(31), N(28), N(33)], 0.06, { vol: 0.05, dur: 0.5 }),
+    };
+    (V[kind] || V.butterfly)();
   },
-  pop() { this.noise(0.12, 0.6, 2200); this.tone(620, 0.14, { slide: 140, vol: 0.3 }); this.tone(rand(900, 1300), 0.25, { type: 'triangle', vol: 0.12, delay: 0.05 }); },
-  bloop() { this.tone(300, 0.12, { slide: 1100, vol: 0.3 }); this.tone(1400, 0.15, { vol: 0.08, delay: 0.08 }); },
-  boom() { this.noise(0.5, 0.5, 600, 0, 0.5); for (let i = 0; i < 6; i++) this.noise(0.05, 0.25, 4000, 0.15 + i * 0.07); this.chime(); },
-  boing() { this.tone(220, 0.3, { type: 'triangle', slide: 660, vol: 0.3 }); },
-  hop() { this.tone(rand(380, 440), 0.07, { slide: 600, vol: 0.06 }); },
-  plop() { const f = pickOne(PENTA); this.tone(f, 0.35, { type: 'triangle', vol: 0.22 }); this.tone(f * 2, 0.2, { vol: 0.05 }); },
-  giggle() { for (let i = 0; i < 5; i++) this.tone(700 + i * 40, 0.09, { type: 'triangle', slide: 1050 + i * 60, vol: 0.18, delay: i * 0.1 }); },
-  chime() { [0, 2, 4, 7].forEach((n, i) => this.tone(PENTA[n], 0.4, { type: 'triangle', vol: 0.2, delay: i * 0.08 })); },
-  flutter() { for (let i = 0; i < 6; i++) this.tone(PENTA[(i * 3) % PENTA.length] * 1.5, 0.12, { vol: 0.1, delay: i * 0.05 }); },
-  click() { for (let i = 0; i < 4; i++) { this.noise(0.04, 0.4, 3500, i * 0.12, 3); this.tone(900, 0.04, { type: 'square', vol: 0.05, delay: i * 0.12 }); } },
-  whee() { this.tone(350, 0.6, { type: 'triangle', slide: 1300, vol: 0.22 }); this.noise(0.6, 0.15, 5000, 0, 0.5); },
-  rustle() { this.noise(0.35, 0.35, 1200, 0, 0.6); this.noise(0.3, 0.2, 2500, 0.1, 0.6); },
-  chomp() { [0, 0.22].forEach((d) => { this.tone(260, 0.1, { type: 'square', slide: 140, vol: 0.12, delay: d }); this.noise(0.06, 0.3, 900, d); }); this.tone(PENTA[5], 0.3, { type: 'triangle', vol: 0.15, delay: 0.5 }); },
-  moo() { this.tone(160, 0.9, { type: 'sawtooth', slide: 115, vol: 0.1 }); this.tone(162, 0.9, { type: 'triangle', slide: 118, vol: 0.25 }); },
-  oink() { [0, 0.22].forEach((d) => { this.tone(380, 0.14, { type: 'square', slide: 220, vol: 0.08, delay: d }); this.noise(0.12, 0.3, 700, d, 2); }); },
-  baa() { for (let i = 0; i < 6; i++) this.tone(i % 2 ? 420 : 470, 0.09, { type: 'sawtooth', vol: 0.08, delay: i * 0.08 }); },
-  cheep() { [0, 0.18].forEach((d) => this.tone(2200, 0.1, { slide: 2900, vol: 0.15, delay: d })); },
-  rawr() { this.tone(240, 0.6, { type: 'sawtooth', slide: 90, vol: 0.13 }); this.noise(0.6, 0.35, 400, 0, 0.7); },
-  uiii() { this.tone(500, 0.25, { slide: 1500, vol: 0.2 }); this.tone(1500, 0.3, { slide: 600, vol: 0.2, delay: 0.25 }); },
-  ufo() { for (let i = 0; i < 8; i++) this.tone(i % 2 ? 900 : 700, 0.08, { vol: 0.12, delay: i * 0.06 }); },
-  wobble() { for (let i = 0; i < 6; i++) this.tone(800 - i * 80, 0.12, { type: 'triangle', slide: 700 - i * 80, vol: 0.15, delay: i * 0.12 }); },
-  rain() { this.noise(1.6, 0.18, 3000, 0, 0.3); for (let i = 0; i < 12; i++) this.tone(rand(1500, 2500), 0.05, { vol: 0.05, delay: rand(0, 1.5) }); },
-  rumble() { this.noise(1.2, 0.6, 120, 0, 0.6); this.tone(70, 1.2, { type: 'sawtooth', slide: 40, vol: 0.12 }); },
-  rocket() { this.noise(2.5, 0.4, 500, 0, 0.4); this.tone(150, 2.5, { type: 'sawtooth', slide: 600, vol: 0.06 }); },
-  coins() { for (let i = 0; i < 8; i++) this.tone(PENTA[(i * 2) % 8] * 2, 0.15, { type: 'triangle', vol: 0.1, delay: i * 0.06 }); },
-  whoosh() { this.noise(0.9, 0.35, 900, 0, 0.4); this.tone(200, 0.9, { slide: 900, vol: 0.12 }); },
   fanfare() {
-    const seq = [0, 2, 4, 5, 4, 5, 7];
-    seq.forEach((n, i) => { this.tone(PENTA[n], 0.35, { type: 'square', vol: 0.06, delay: i * 0.15 }); this.tone(PENTA[n], 0.4, { type: 'triangle', vol: 0.18, delay: i * 0.15 }); });
-    this.tone(PENTA[7], 0.9, { type: 'triangle', vol: 0.22, delay: seq.length * 0.15 });
+    music.duck(4);
+    this.arp([N(12), N(16), N(19), N(24)], 0.14, { vol: 0.1, dur: 0.6, type: 'triangle', bright: 0.2 });
+    [N(12), N(16), N(19), N(24), N(28)].forEach((f) => this.note(f, { vol: 0.05, dur: 1.6, delay: 0.62 }));
+  },
+};
+
+// colonna sonora: carillon dolce, una melodia diversa per ogni tipo di mondo
+const TUNES = {
+  // note in semitoni dal do centrale (null = pausa), un basso per ogni battuta da 8
+  allegra: { step: 0.27, mel: [12, null, 16, null, 19, null, 16, null, 21, null, 19, null, 16, null, null, null, 14, null, 16, null, 19, null, 21, null, 19, null, 16, null, 12, null, null, null], bass: [0, 5, 7, 0] },
+  acqua: { step: 0.3, mel: [16, 19, 21, 19, 16, null, 14, null, 12, 14, 16, null, 19, null, null, null, 21, 19, 16, 14, 12, null, 14, null, 16, null, null, null, null, null, null, null], bass: [-3, 5, 0, 7] },
+  ninna: { step: 0.4, mel: [19, null, 16, null, null, null, 19, null, 21, null, 19, null, 16, null, null, null, 12, null, 14, null, 16, null, 19, null, 16, null, 14, null, 12, null, null, null], bass: [0, -3, 5, 7] },
+};
+const music = {
+  on: true, tune: TUNES.allegra, nextT: 0, step: 0,
+  set(name) { this.tune = TUNES[name] || TUNES.allegra; this.step = 0; },
+  start() {
+    if (!sfx.ctx || !this.on) return;
+    const g = sfx.mus.gain, t = sfx.ctx.currentTime;
+    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(1, t + 2);
+  },
+  stop() { if (!sfx.ctx) return; const g = sfx.mus.gain, t = sfx.ctx.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0, t + 0.5); },
+  duck(sec) { // abbassa la musica durante la festa
+    if (!sfx.ctx || !this.on) return;
+    const g = sfx.mus.gain, t = sfx.ctx.currentTime;
+    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0.25, t + 0.3); g.setValueAtTime(0.25, t + sec); g.linearRampToValueAtTime(1, t + sec + 1.5);
+  },
+  tick() {
+    const ctx = sfx.ctx;
+    if (!ctx || ctx.state !== 'running' || !this.on) return;
+    if (this.nextT < ctx.currentTime - 0.3) this.nextT = ctx.currentTime + 0.1; // dopo una pausa riparte pulita
+    const tn = this.tune;
+    while (this.nextT < ctx.currentTime + 0.2) {
+      const i = this.step % tn.mel.length, t = this.nextT - ctx.currentTime;
+      const m = tn.mel[i];
+      if (m !== null) sfx.note(N(m), { delay: t, vol: 0.045, dur: 1.1, out: sfx.mus, bright: 0.3 });
+      if (i % 8 === 0) sfx.note(N(tn.bass[(i / 8) % tn.bass.length] - 12), { delay: t, vol: 0.05, dur: tn.step * 7, type: 'triangle', out: sfx.mus, bright: 0 });
+      if (i % 8 === 4) sfx.note(N(tn.bass[((i - 4) / 8) % tn.bass.length] - 5), { delay: t, vol: 0.025, dur: tn.step * 3, type: 'triangle', out: sfx.mus, bright: 0 });
+      this.nextT += tn.step; this.step++;
+    }
   },
 };
 const buzz = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { /* niente */ } };
@@ -465,7 +508,7 @@ const leo = (() => {
     st.yaw = angleLerp(st.yaw, st.moving ? wantYaw : 0, Math.min(1, dt * (st.moving ? 10 : 4)));
     if (!st.grounded) {
       st.vy -= G() * dt; st.y += st.vy * dt;
-      if (st.y <= 0) { st.y = 0; st.grounded = true; st.squash = -0.28 * Math.min(1, Math.abs(st.vy) / 6); st.vy = 0; if (st.moving) { sfx.hop(); st.onStep && st.onStep(); } }
+      if (st.y <= 0) { st.y = 0; st.grounded = true; st.squash = -0.28 * Math.min(1, Math.abs(st.vy) / 6); st.vy = 0; if (st.moving) { st.onStep && st.onStep(); } }
     }
     st.squashV += (-st.squash * 160 - st.squashV * 12) * dt; st.squash += st.squashV * dt;
     const sq = clamp(st.squash, -0.4, 0.4);
@@ -500,7 +543,7 @@ const leo = (() => {
     eyes.forEach((e) => (e.scale.y = st.dizzyT > 0 ? 0.3 : st.happyT > 0 || st.munchT > 0 ? 0.55 : blink));
     shadow.position.set(st.pos.x, SHY, st.pos.z);
     const ss = 1.6 * (1 - Math.min(0.5, st.y * 0.15)); shadow.scale.set(ss, 1, ss);
-    if (st.idleT > 9 && !st.moving && st.dizzyT <= 0) { st.wave(); sfx.giggle(); }
+    if (st.idleT > 9 && !st.moving && st.dizzyT <= 0) { st.wave(); }
   };
   st.center = () => new THREE.Vector3(st.pos.x, st.y + 1.1, st.pos.z);
   return st;
@@ -616,6 +659,20 @@ function makeCollectible(kind) {
     g.add(mesh(BOX, rib, 0, 0, 0, 0.14, 0.57, 0.57), mesh(BOX, rib, 0, 0, 0, 0.64, 0.57, 0.14));
     g.add(ball(0.13, rib, -0.1, 0.32, 0, 1.2, 0.8, 0.8), ball(0.13, rib, 0.1, 0.32, 0, 1.2, 0.8, 0.8));
   }
+  if (kind === 'ladybug') {
+    g.add(ball(0.36, 0xff3b3b, 0, 0, 0, 1, 1.05, 0.7));
+    g.add(mesh(BOX, 0x222222, 0, 0, 0.2, 0.03, 0.7, 0.12));
+    [[-0.17, 0.12], [0.17, 0.12], [-0.2, -0.12], [0.2, -0.12], [0, -0.26]].forEach(([x, y]) => g.add(ball(0.065, 0x222222, x, y, 0.22, 1, 1, 0.4)));
+    const h = new THREE.Group(); h.position.set(0, 0.36, 0.05); g.add(h);
+    h.add(ball(0.17, 0x222222));
+    [-0.06, 0.06].forEach((x) => { h.add(ball(0.045, 0xffffff, x, 0.02, 0.14)); h.add(ball(0.02, 0x222222, x, 0.02, 0.18)); });
+    [-1, 1].forEach((s) => { const a = mesh(CYL, 0x222222, s * 0.08, 0.2, 0, 0.012, 0.18, 0.012); a.rotation.z = -s * 0.4; h.add(a); h.add(ball(0.03, 0x222222, s * 0.12, 0.28, 0)); });
+  }
+  if (kind === 'bone') {
+    const b = mesh(CYL, 0xfff6e6, 0, 0, 0, 0.09, 0.6, 0.09); b.rotation.z = Math.PI / 2; g.add(b);
+    [[-0.32, 0.08], [-0.32, -0.08], [0.32, 0.08], [0.32, -0.08]].forEach(([x, y]) => g.add(ball(0.11, 0xfff6e6, x, y, 0)));
+    face(g, 0.09, 0.8);
+  }
   if (kind === 'egg' || kind === 'dinoegg') {
     const dino = kind === 'dinoegg';
     g.add(ball(0.33, dino ? 0xd9f5c0 : 0xfff3e0, 0, 0, 0, 0.85, 1.15, 0.85));
@@ -642,6 +699,8 @@ const HUD_ICON = {
   star: { path: 'M25 3l6.5 14 15 1.6-11.3 10 3.3 15L25 36l-13.5 7.6 3.3-15L3.5 18.6l15-1.6z', fill: '#ffd23f', stroke: '#f0a500' },
   nightstar: { path: 'M25 3l6.5 14 15 1.6-11.3 10 3.3 15L25 36l-13.5 7.6 3.3-15L3.5 18.6l15-1.6z', fill: '#ffe066', stroke: '#fff6c0' },
   starfish: { path: 'M25 3l6.5 14 15 1.6-11.3 10 3.3 15L25 36l-13.5 7.6 3.3-15L3.5 18.6l15-1.6z', fill: '#ff8a5c', stroke: '#e0603a' },
+  ladybug: { path: 'M25 15a16 14.5 0 1 0 .01 0zM17 12a8 7 0 0 1 16 0zM24.2 16h1.6v28h-1.6zM17 23a3.2 3.2 0 1 0 .01 0zM33 23a3.2 3.2 0 1 0 .01 0zM19 34a3 3 0 1 0 .01 0zM31 34a3 3 0 1 0 .01 0z', fill: '#ff3b3b', stroke: '#a81e1e' },
+  bone: { path: 'M13 15a6 6 0 0 1 6 5h12a6 6 0 1 1 6 5 6 6 0 1 1-6 5H19a6 6 0 1 1-6-5 6 6 0 0 1 0-10z', fill: '#fff6e6', stroke: '#c9b08a' },
   egg: { path: 'M25 4c-9 0-16 15-16 25a16 16 0 0 0 32 0C41 19 34 4 25 4z', fill: '#fff3e0', stroke: '#e0b98a' },
   dinoegg: { path: 'M25 4c-9 0-16 15-16 25a16 16 0 0 0 32 0C41 19 34 4 25 4z', fill: '#9be07a', stroke: '#4fa04a' },
   pearl: { path: 'M25 9a16 16 0 1 0 .01 0z', fill: '#ffffff', stroke: '#ff9ab8' },
@@ -911,7 +970,7 @@ function buildBarn() {
   g.position.set(0, 0, -15.5); g.scale.setScalar(1.25);
   addExtra(g, new THREE.Vector3(0, 1.7, -15.5), 2.5, (ex) => { // il fienile si apre ed esce un pulcino
     if (ex.busy) return; ex.busy = true;
-    sfx.moo(); setTimeout(() => sfx.oink(), 500); setTimeout(() => sfx.baa(), 900); setTimeout(() => sfx.cheep(), 1300);
+    sfx.magic(); setTimeout(() => sfx.voice('chick'), 700);
     tween(0.4, (k) => (door.rotation.y = -k * 1.6), () => later(1500, () => tween(0.4, (k) => (door.rotation.y = -1.6 * (1 - k)), () => (ex.busy = false))));
     if (friends.length < 9) { const c = makeFriend('chick'); c.pos.set(rand(-1, 1), 0, bounds.zMin + 0.3); friends.push(c); }
     particles.burst(new THREE.Vector3(0, 1, bounds.zMin), [0xffe14d, 0xffffff], 15, 3, { up: 2 });
@@ -933,7 +992,7 @@ function buildVolcano() {
   let smokeT = 0;
   addExtra(g, new THREE.Vector3(VX, 2.2, VZ), 2.8, (ex) => { // eruzione!
     if (ex.busy) return; ex.busy = true;
-    sfx.rumble(); buzz([80, 60, 80]);
+    sfx.magic(); buzz([80, 60, 80]);
     for (let i = 0; i < 6; i++) later(i * 150, () => particles.burst(top, [0xff4d2a, 0xffa62b, 0xffe14d, 0xff6a2a], 25, 6, { up: 7, gravity: 8, sz: 2.2, lifeT: 1.8 }));
     tween(1.2, (k) => (g.position.x = VX + Math.sin(k * 60) * 0.1 * (1 - k)), () => (ex.busy = false));
   }, (dt) => {
@@ -956,9 +1015,9 @@ function buildRocket() {
   g.position.set(-5.5, 0, -12.5);
   addExtra(g, new THREE.Vector3(-5.5, 1.8, -12.5), 2, (ex) => { // decollo!
     if (ex.busy) return; ex.busy = true;
-    sfx.rocket(); buzz(100);
+    sfx.magic(); buzz(100);
     ex.flying = true;
-    tween(3, (k) => (body.position.y = k * k * 30), () => { ex.flying = false; later(1200, () => { sfx.whee(); tween(2.2, (k) => (body.position.y = 30 * (1 - easeInOut(k))), () => { ex.busy = false; particles.burst(new THREE.Vector3(-5.5, 0.3, -12.5), [0xdddddd, 0xffffff], 20, 3, { up: 1 }); }); }); });
+    tween(3, (k) => (body.position.y = k * k * 30), () => { ex.flying = false; later(1200, () => { tween(2.2, (k) => (body.position.y = 30 * (1 - easeInOut(k))), () => { ex.busy = false; particles.burst(new THREE.Vector3(-5.5, 0.3, -12.5), [0xdddddd, 0xffffff], 20, 3, { up: 1 }); }); }); });
   }, (dt) => {
     const ex = extras.find((e) => e.g === g);
     if (ex && ex.flying && Math.random() < 0.8) particles.burst(new THREE.Vector3(-5.5, body.position.y + 0.1, -12.5), [0xffa62b, 0xff4d2a, 0xffe14d], 3, 1.5, { up: -3, gravity: -1, sz: 1.5, lifeT: 0.5 });
@@ -975,7 +1034,7 @@ function buildChest() {
   g.position.set(4.5, 0, -11.5);
   addExtra(g, new THREE.Vector3(4.5, 0.6, -11.5), 1.2, (ex) => { // tesoro!
     if (ex.busy) return; ex.busy = true;
-    sfx.coins(); buzz(40);
+    sfx.magic(); buzz(40);
     tween(0.35, (k) => (lid.rotation.x = -k * 1.3), () => later(2200, () => tween(0.4, (k) => (lid.rotation.x = -1.3 * (1 - k)), () => (ex.busy = false))));
     particles.burst(new THREE.Vector3(4.5, 1, -11.5), [0xffd23f, 0xffe98a, 0xffffff, 0xff8ab0], 50, 5, { up: 6, gravity: 7, sz: 1.3, lifeT: 1.6 });
   });
@@ -986,7 +1045,7 @@ const THEMES = [
   {
     id: 'prato', sky: ['#4fb3ff', '#a9dcff', '#e6f7ff'], fog: [0xd6f0ff, 35, 80], ground: 0x7fd65b, patches: [0x95e36b, 0x6cc94e],
     hills: [0x5cbf4a, 0x6fcf55, 0x58b845], light: [0xffffff, 0x88cc77, 1.6, 1.8], skyObj: 'sun',
-    tree: () => meadowTree(), fruit: 'apple', collect: 'star', floater: 'balloon', friend: ['butterfly', 'butterfly'], sprout: 'flower', fade: '#a9dcff',
+    tree: () => meadowTree(), fruit: 'apple', collect: 'ladybug', floater: 'balloon', friend: ['butterfly', 'butterfly'], sprout: 'flower', fade: '#a9dcff',
   },
   {
     id: 'fattoria', sky: ['#5ab8ff', '#b4e0ff', '#fff6dc'], fog: [0xeaf6ff, 35, 80], ground: 0x8ed45e, patches: [0xa3e070, 0xc8a26a],
@@ -994,32 +1053,32 @@ const THEMES = [
     tree: () => meadowTree(), fruit: 'pear', collect: 'egg', floater: 'balloon', friend: ['cow', 'pig', 'sheep', 'chick', 'chick'], sprout: 'carrot', fade: '#b4e0ff',
   },
   {
-    id: 'mare', sky: ['#38b6ff', '#9fe0ff', '#fff4d6'], fog: [0xfff4d6, 35, 80], ground: 0xf5d98b, patches: [0xfbe6a8, 0xeccb74],
+    id: 'mare', tune: 'acqua', sky: ['#38b6ff', '#9fe0ff', '#fff4d6'], fog: [0xfff4d6, 35, 80], ground: 0xf5d98b, patches: [0xfbe6a8, 0xeccb74],
     sea: true, light: [0xffffff, 0xffe0a0, 1.6, 1.8], skyObj: 'sun', prints: 0xd9b860,
     tree: () => palmTree(), fruit: 'coconut', collect: 'starfish', floater: 'bubble', friend: ['crab', 'crab'], sprout: 'beach', fade: '#9fe0ff',
   },
   {
-    id: 'fondale', sky: ['#06456e', '#1678a8', '#3fb0d8'], fog: [0x1a7aa8, 16, 50], ground: 0xe6d6a2, patches: [0xd5c08a, 0xf0e3b8],
+    id: 'fondale', tune: 'acqua', sky: ['#06456e', '#1678a8', '#3fb0d8'], fog: [0x1a7aa8, 16, 50], ground: 0xe6d6a2, patches: [0xd5c08a, 0xf0e3b8],
     hills: [0x5a7896, 0x6a88a6, 0x4a6886], light: [0xc8f4ff, 0x2a6080, 1.6, 1.1], skyObj: null, noClouds: true, ambient: 'bubbles', water: true, extra: buildChest,
     tree: () => kelpTree(), fruit: 'berry', collect: 'pearl', floater: 'jellyfish', friend: ['fish', 'fish', 'fish', 'crab'], sprout: 'coral', fade: '#1678a8',
   },
   {
-    id: 'neve', sky: ['#8fc8f0', '#cfe8fa', '#f4faff'], fog: [0xeef6ff, 30, 75], ground: 0xf2f7ff, patches: [0xe2ecf8, 0xffffff],
+    id: 'neve', tune: 'acqua', sky: ['#8fc8f0', '#cfe8fa', '#f4faff'], fog: [0xeef6ff, 30, 75], ground: 0xf2f7ff, patches: [0xe2ecf8, 0xffffff],
     hills: [0xffffff, 0xeaf2fc, 0xf6faff], light: [0xffffff, 0xbcd4f0, 1.5, 1.6], skyObj: 'sun', ambient: 'snow', snow: true, prints: 0xc8d8ec,
     tree: () => pineTree(), fruit: 'cookie', collect: 'gift', floater: 'balloon', friend: ['penguin', 'penguin'], sprout: 'snowman', fade: '#ffffff',
   },
   {
     id: 'dinosauri', sky: ['#5fb0e8', '#b5e2f5', '#fff0d0'], fog: [0xf4f0dc, 35, 85], ground: 0x9bcf55, patches: [0xb0dd6a, 0x86bb48],
     hills: [0x6f9e3c, 0x7fae48, 0x5f8e34], light: [0xffffff, 0xa0c070, 1.6, 1.8], skyObj: 'sun', prints: 0x6f9a3c, extra: buildVolcano, skipTrees: [1, 6], noClouds: true,
-    tree: () => palmTree(), fruit: 'banana', collect: 'dinoegg', floater: 'balloon', friend: ['dino', 'dino', 'butterfly'], sprout: 'fern', fade: '#b5e2f5',
+    tree: () => palmTree(), fruit: 'banana', collect: 'bone', floater: 'balloon', friend: ['dino', 'dino', 'butterfly'], sprout: 'fern', fade: '#b5e2f5',
   },
   {
-    id: 'notte', sky: ['#0b1440', '#23306e', '#3b3f86'], fog: [0x1d2658, 22, 60], ground: 0x2e6650, patches: [0x367560, 0x285a47],
+    id: 'notte', tune: 'ninna', sky: ['#0b1440', '#23306e', '#3b3f86'], fog: [0x1d2658, 22, 60], ground: 0x2e6650, patches: [0x367560, 0x285a47],
     hills: [0x1f4a3e, 0x24543f, 0x1b4436], light: [0xb8c6ff, 0x304060, 1.6, 1.0], night: true, skyObj: 'moon',
     tree: () => meadowTree(true), fruit: 'golden', collect: 'nightstar', floater: 'lantern', friend: ['firefly', 'firefly', 'firefly', 'firefly'], sprout: 'mushroom', fade: '#23306e',
   },
   {
-    id: 'spazio', sky: ['#05040f', '#120b30', '#2a1a55'], fog: [0x160e38, 25, 70], ground: 0xb9b3d6, patches: [0x9d96c2, 0xccc6e6],
+    id: 'spazio', tune: 'ninna', sky: ['#05040f', '#120b30', '#2a1a55'], fog: [0x160e38, 25, 70], ground: 0xb9b3d6, patches: [0x9d96c2, 0xccc6e6],
     hills: [0x8a84b0, 0x9a94c0, 0x7a74a0], light: [0xe0d8ff, 0x403060, 1.6, 1.2], night: true, skyObj: 'planet', gravity: 7, prints: 0x8a84b0, skipTrees: [1], extra: buildRocket,
     tree: () => crystalTree(), fruit: 'golden', collect: 'planet', floater: 'ufo', friend: ['alien', 'alien'], sprout: 'crystal', fade: '#120b30',
   },
@@ -1065,7 +1124,7 @@ const beach = (() => {
     b.cool -= dt;
     if (b.cool <= 0 && leo.y < 1 && Math.hypot(leo.pos.x - b.pos.x, leo.pos.z - b.pos.z) < 0.95) {
       const dir = new THREE.Vector3(b.pos.x - leo.pos.x, 0, b.pos.z - leo.pos.z).normalize();
-      b.kick(dir, rand(5, 7)); sfx.boing(); buzz(20);
+      b.kick(dir, rand(5, 7)); buzz(20);
       particles.burst(new THREE.Vector3(b.pos.x, 0.2, b.pos.z), [0xffffff, 0xffd93d], 8, 2, { up: 1, sz: 0.7, lifeT: 0.5 });
     }
     b.vy -= g * 0.7 * dt; b.y += b.vy * dt;
@@ -1102,6 +1161,7 @@ function buildWorld(th) {
   sun.visible = th.skyObj === 'sun'; moon.visible = th.skyObj === 'moon'; planet.visible = th.skyObj === 'planet'; skyStars.visible = !!th.night;
   clouds.forEach((c) => (c.visible = !th.night && !th.noClouds));
   setAmbient(th.ambient);
+  music.set(th.tune || 'allegra');
   leo.outfit(th.id);
   document.documentElement.style.background = th.fade;
 
@@ -1128,7 +1188,7 @@ function buildWorld(th) {
     trees.push({ g, pos: new THREE.Vector3(x, 1.9 * s, z), r: 1.3 * s, s });
   });
 
-  for (let i = 0; i < 3; i++) spawnCollectible();
+  spawnCollectible();
   const nf = W > H ? 4 : 3;
   for (let i = 0; i < nf; i++) spawnFloater();
   th.friend.forEach((k) => friends.push(makeFriend(k)));
@@ -1136,7 +1196,9 @@ function buildWorld(th) {
 }
 
 // ---- spawn / interazioni
+const COLLECT_LIFE = 15; // secondi prima che sparisca (e ricompaia altrove)
 function spawnCollectible() {
+  if (collected >= GOAL || collectibles.length > 0) return; // sempre e solo una alla volta
   let p;
   for (let tries = 0; tries < 30; tries++) {
     p = randomSpot(0.8);
@@ -1144,7 +1206,7 @@ function spawnCollectible() {
   }
   const g = makeCollectible(theme.collect);
   g.position.copy(p); g.scale.setScalar(0.01); world.add(g);
-  const c = { g, pos: p, t: rand(0, 6), alive: true, shadow: blobShadow(0.9), wiggle: 0 };
+  const c = { g, pos: p, t: rand(0, 6), alive: true, shadow: blobShadow(0.9), wiggle: 0, life: COLLECT_LIFE, glint: 0 };
   c.shadow.position.set(p.x, SHY, p.z);
   tween(0.6, (k) => g.scale.setScalar(Math.max(0.01, easeOutBack(k)) * 1.25));
   collectibles.push(c);
@@ -1162,10 +1224,9 @@ function collect(c) {
   c.alive = false;
   collectibles.splice(collectibles.indexOf(c), 1);
   world.remove(c.shadow);
-  sfx.chime(); buzz(30);
+  sfx.collect(); buzz(30);
   particles.burst(c.pos.clone().setY(0.8), [0xffd23f, 0xfff3a0, 0xffffff], 26, 4);
   leo.happy();
-  later(1200, spawnCollectible);
   if (collected >= GOAL) { // barra piena (festa in corso): vola via e basta
     const s0 = c.g.scale.x;
     tween(0.5, (k) => { c.g.position.y += 0.15; c.g.scale.setScalar(Math.max(0.01, s0 * (1 - k))); }, () => world.remove(c.g));
@@ -1178,17 +1239,27 @@ function collect(c) {
   const dest = raycaster.ray.at(4, new THREE.Vector3());
   const from = c.g.position.clone();
   const idx = collected++;
+  later(1500, spawnCollectible);
   tween(0.7, (k) => {
     c.g.position.lerpVectors(from, dest, easeInOut(k)); c.g.position.y += Math.sin(k * Math.PI) * 1.5;
     c.g.rotation.y += 0.4; c.g.scale.setScalar(1.25 * (1 - k * 0.6));
   }, () => {
     world.remove(c.g);
     hud.children[idx].classList.add('on');
-    sfx.tone(PENTA[idx + 2], 0.3, { type: 'triangle', vol: 0.2 });
+    sfx.slot(idx);
     if (idx === GOAL - 1) party();
   });
 }
 
+function vanish(c) {
+  c.alive = false;
+  collectibles.splice(collectibles.indexOf(c), 1);
+  world.remove(c.shadow);
+  const s0 = c.g.scale.x;
+  tween(0.5, (k) => { c.g.scale.setScalar(Math.max(0.01, s0 * (1 - k))); c.g.position.y += 0.05; }, () => world.remove(c.g));
+  particles.burst(c.g.position, [0xffffff, 0xfff3a0], 10, 1.5, { up: 1, gravity: 0.5, sz: 0.7 });
+  later(rand(1500, 3000), spawnCollectible);
+}
 const tmpV = new THREE.Vector3();
 function spawnFloater() {
   const { g, color } = makeFloater(theme.floater);
@@ -1208,16 +1279,16 @@ function popFloater(f) {
   world.remove(f.g); world.remove(f.shadow);
   buzz(40);
   if (theme.floater === 'bubble') {
-    sfx.bloop();
+    sfx.pop();
     particles.burst(f.g.position, [f.color, 0xffffff], 25, 3, { up: 0.5, gravity: 1, sz: 0.7, lifeT: 0.7 });
   } else if (theme.floater === 'jellyfish') {
-    sfx.bloop(); sfx.flutter();
+    sfx.pop();
     particles.burst(f.g.position, [f.color, 0xffffff, 0xd8f8ff], 35, 3, { up: 1, gravity: -1, sz: 0.9, lifeT: 1.2 });
   } else if (theme.floater === 'ufo') {
-    sfx.ufo();
+    sfx.pop();
     particles.burst(f.g.position, [f.color, 0xffffff, 0xffe14d, 0x9bff8a], 45, 5, { up: 2, gravity: 1, sz: 1, lifeT: 1.2 });
   } else if (theme.floater === 'lantern') { // fuoco d'artificio!
-    sfx.boom();
+    sfx.pop(); sfx.sparkle();
     particles.burst(f.g.position, [f.color, 0xffffff, pickOne(PALETTE), pickOne(PALETTE)], 70, 9, { up: 1, gravity: 2, sz: 1.1, lifeT: 1.4 });
   } else {
     sfx.pop();
@@ -1246,19 +1317,19 @@ function tapFriend(f) {
   buzz(20);
   if (f.kind === 'butterfly' || f.kind === 'firefly') {
     f.actT = 0.8; f.newTarget();
-    sfx.flutter();
+    sfx.voice(f.kind);
     particles.burst(f.g.position, f.kind === 'firefly' ? [0xeaff6a, 0xffffff, 0xfff3a0] : [f.color, 0xffffff, 0xfff3a0], f.kind === 'firefly' ? 35 : 20, 3, { up: 1, gravity: 1.5 });
   } else if (f.kind === 'fish') {
-    f.actT = 0.8; f.newTarget(); sfx.bloop();
+    f.actT = 0.8; f.newTarget(); sfx.voice('fish');
     particles.burst(f.g.position, [0xd8f8ff, 0xffffff, f.color], 20, 2, { up: 1.5, gravity: -2, sz: 0.8 });
   } else if (f.sound) { // animali: saltano e fanno il loro verso
-    f.actT = 1; sfx[f.sound]();
+    f.actT = 1; sfx.voice(f.kind);
     particles.burst(f.g.position.clone().setY(1.4), f.kind === 'dino' || f.kind === 'alien' ? [f.color, 0xffffff, 0xffe14d] : HEARTS, 12, 2.5, { up: 2, gravity: 1, sz: 1 });
     if (f.kind === 'dino') particles.burst(f.g.position.clone().setY(0.1), [0xc8b08a, 0xa08a6a], 14, 3, { up: 1, gravity: 6, sz: 0.9, lifeT: 0.7 });
   } else if (f.kind === 'crab') {
-    f.actT = 1.4; sfx.click();
+    f.actT = 1.4; sfx.voice('crab');
   } else if (f.kind === 'penguin') {
-    f.actT = 1.3; sfx.whee();
+    f.actT = 1.3; sfx.voice('penguin');
     const dir = new THREE.Vector3(rand(-1, 1), 0, rand(-1, 1)).normalize();
     f.target.copy(f.pos).addScaledVector(dir, 3.5); clampToBounds(f.target); f.target.y = 0;
     particles.burst(f.g.position.clone().setY(0.3), [0xffffff, 0xdff1ff], 20, 2.5, { up: 1.5, gravity: 5 });
@@ -1312,7 +1383,7 @@ function updateFriend(f, dt) {
 
 // alberi: si scuotono e cade un frutto
 function shakeTree(tr) {
-  sfx.rustle(); buzz(20);
+  buzz(20);
   const g = tr.g;
   tween(0.6, (k) => { g.rotation.z = Math.sin(k * Math.PI * 6) * 0.08 * (1 - k); });
   particles.burst(tr.pos.clone().setY(tr.pos.y + 0.5), theme.snow ? [0xffffff, 0xeaf6ff] : [0x4cc25a, 0x3fae49, 0x7fd65b], 14, 2.5, { up: 1, gravity: 4, sz: 0.8 });
@@ -1329,7 +1400,6 @@ function shakeTree(tr) {
     g2.position.y = lerp(from.y, 0.3, k) + Math.sin(k * Math.PI) * 1.8;
     g2.rotation.x += 0.2;
   }, () => {
-    sfx.tone(300, 0.12, { slide: 200, vol: 0.2 });
     fr.ready = true; g2.rotation.set(0, 0, 0);
     leo.goTo(land); // Leo corre a mangiarlo!
   });
@@ -1337,7 +1407,7 @@ function shakeTree(tr) {
 function eatFruit(fr) {
   fruits.splice(fruits.indexOf(fr), 1);
   world.remove(fr.shadow);
-  sfx.chomp(); buzz([20, 60, 20]);
+  sfx.munch(); buzz([20, 60, 20]);
   leo.munch();
   const g = fr.g; const s0 = g.scale.x;
   tween(0.8, (k) => { g.position.lerp(leo.center().setY(1.3), 0.25); g.scale.setScalar(Math.max(0.01, s0 * (1 - k))); }, () => {
@@ -1375,7 +1445,6 @@ function updateParty(dt) {
   partyTime -= dt;
   if (Math.floor(before * 3) !== Math.floor(partyTime * 3)) {
     particles.burst(randomSpot().setY(rand(2, 4)), PALETTE, theme.night ? 60 : 40, theme.night ? 9 : 7, { up: 2, gravity: theme.night ? 2.5 : 6, lifeT: theme.night ? 1.4 : 1.1 });
-    theme.night ? sfx.noise(0.3, 0.3, 700, 0, 0.5) : sfx.tone(pickOne(PENTA) * 2, 0.2, { type: 'triangle', vol: 0.08 });
   }
   if (leo.grounded && partyTime > 1) leo.happy(Math.random() < 0.4);
   if (partyTime <= 0) travel();
@@ -1386,7 +1455,7 @@ function travel() {
   const next = THEMES[(themeIndex + 1) % THEMES.length];
   wipe.style.background = next.fade;
   wipe.classList.add('on');
-  sfx.whoosh();
+  sfx.travel();
   later(650, () => {
     themeIndex = (themeIndex + 1) % THEMES.length; theme = THEMES[themeIndex];
     hud.classList.remove('party');
@@ -1394,7 +1463,7 @@ function travel() {
     leo.pos.set(0, 0, 1); leo.moving = false;
     buildWorld(theme); setupHud();
     wipe.classList.remove('on');
-    later(450, () => { busy = false; leo.wave(); sfx.giggle(); });
+    later(450, () => { busy = false; leo.wave(); });
   });
 }
 
@@ -1404,11 +1473,11 @@ function tapSky(o) {
   const s0 = o.scale.x;
   tween(0.8, (k) => { o.rotation.z = k * Math.PI * 2; o.scale.setScalar(s0 * (1 + Math.sin(k * Math.PI) * 0.35)); }, () => (o.rotation.z = 0));
   if (o === sun) { // il sole ride e tutto ciò che è nato balla
-    sfx.giggle(); sfx.chime();
+    sfx.magic();
     sprouts.forEach((g, i) => { const b = g.scale.x; tween(0.6, (k) => g.scale.set(b * (1 + Math.sin(k * Math.PI * 3) * 0.2 * (1 - k)), b * (1 + Math.sin(k * Math.PI * 3) * 0.3 * (1 - k)), b)); });
     leo.happy();
   } else { // luna e pianeta: pioggia di stelle cadenti
-    sfx.flutter(); sfx.chime();
+    sfx.magic();
     for (let n = 0; n < 4; n++) {
       const x0 = rand(-bounds.xHalf, bounds.xHalf * 0.3), z0 = rand(bounds.zMin, bounds.zMin + 3);
       for (let i = 0; i < 8; i++) later(n * 300 + i * 50, () => particles.burst(new THREE.Vector3(x0 + i * 0.6, 6 - i * 0.5, z0), [0xfff3a0, 0xffffff, 0xffe14d], 4, 0.8, { up: 0, gravity: 0.5, sz: 0.9, lifeT: 0.7 }));
@@ -1416,13 +1485,13 @@ function tapSky(o) {
   }
 }
 function rainCloud(c) { // la nuvola fa piovere (o nevicare) e nascono 3 cose
-  sfx.rain(); buzz(20);
+  buzz(20);
   const s0 = c.scale.x;
   tween(0.5, (k) => c.scale.setScalar(s0 * (1 + Math.sin(k * Math.PI) * 0.2)));
   const cx = rand(-bounds.xHalf * 0.5, bounds.xHalf * 0.5), cz = rand(bounds.zMin + 1, bounds.zMax - 2);
   const drop = theme.snow ? [0xffffff, 0xeaf6ff] : [0x7fc8ff, 0xb8e4ff];
   for (let i = 0; i < 16; i++) later(i * 90, () => particles.burst(new THREE.Vector3(cx + rand(-2.5, 2.5), 6, cz + rand(-1.5, 1.5)), drop, 5, 0.3, { up: -6, gravity: 10, sz: 0.8, lifeT: 0.9 }));
-  for (let i = 0; i < 3; i++) later(1200 + i * 250, () => { const p = clampToBounds(new THREE.Vector3(cx + rand(-2.5, 2.5), 0, cz + rand(-1.5, 1.5))); sproutAt(p); sfx.plop(); });
+  for (let i = 0; i < 3; i++) later(1200 + i * 250, () => { const p = clampToBounds(new THREE.Vector3(cx + rand(-2.5, 2.5), 0, cz + rand(-1.5, 1.5))); sproutAt(p); });
 }
 
 // ---------------------------------------------------------------- tocco (un dito, o anche tanti)
@@ -1473,17 +1542,17 @@ function onTap(cx, cy) {
     if (hit.type === 'leo') {
       leo.taps = leo.taps.filter((t) => now - t < 3000); leo.taps.push(now);
       if (leo.taps.length >= 5) { // troppi solletichi: gli gira la testa!
-        leo.taps = []; leo.dizzy(); sfx.wobble(); buzz([30, 50, 30]);
+        leo.taps = []; leo.dizzy(); sfx.dizzy(); buzz([30, 50, 30]);
         particles.burst(leo.center().setY(leo.y + 2.4), [0xffe14d, 0xffffff], 10, 2, { up: 1, gravity: 0.5 });
         return;
       }
       if (leo.dizzyT > 0) return;
-      sfx.boing(); sfx.giggle(); buzz(25); leo.happy(Math.random() < 0.5);
+      sfx.leo(); buzz(25); leo.happy(Math.random() < 0.5);
       particles.burst(leo.center().setY(leo.y + 2.2), HEARTS, 14, 2.5, { up: 2, gravity: 1, sz: 1.1 });
       return;
     }
     if (hit.type === 'collect') {
-      hit.ref.wiggle = 0.6; sfx.tone(PENTA[4], 0.2, { type: 'triangle', vol: 0.15 });
+      hit.ref.wiggle = 0.6;
       ripple(hit.ref.pos, 0xffd23f);
       return leo.goTo(hit.ref.pos);
     }
@@ -1492,7 +1561,6 @@ function onTap(cx, cy) {
   if (!p) return;
   clampToBounds(p);
   ripple(p);
-  sfx.plop();
   sproutAt(p);
   leo.goTo(p);
 }
@@ -1520,8 +1588,27 @@ startEl.addEventListener('pointerdown', (e) => {
   const de = document.documentElement;
   try { (de.requestFullscreen || de.webkitRequestFullscreen)?.call(de, { navigationUI: 'hide' })?.catch?.(() => {}); } catch (err) { /* niente */ }
   keepAwake();
-  setTimeout(() => { leo.wave(); sfx.giggle(); }, 300);
+  setTimeout(() => { leo.wave(); sfx.leo(); }, 300);
+  music.start();
 });
+// musica: pressione lunga sul bottoncino in alto a destra per accendere/spegnere
+const musicBtn = document.getElementById('music');
+try { music.on = localStorage.getItem('minileo-music') !== 'off'; } catch (e) { /* niente */ }
+musicBtn.classList.toggle('off', !music.on);
+let pressT = null;
+musicBtn.addEventListener('pointerdown', (e) => {
+  e.preventDefault(); e.stopPropagation();
+  musicBtn.classList.add('press');
+  pressT = setTimeout(() => {
+    music.on = !music.on;
+    musicBtn.classList.toggle('off', !music.on);
+    try { localStorage.setItem('minileo-music', music.on ? 'on' : 'off'); } catch (err) { /* niente */ }
+    sfx.init(); music.on ? music.start() : music.stop();
+    buzz(30);
+  }, 800);
+});
+['pointerup', 'pointerleave', 'pointercancel'].forEach((ev) => musicBtn.addEventListener(ev, () => { clearTimeout(pressT); musicBtn.classList.remove('press'); }));
+
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') { keepAwake(); sfx.ctx && sfx.ctx.resume(); }
   else sfx.ctx && sfx.ctx.suspend();
@@ -1549,7 +1636,14 @@ function frame() {
     c.g.rotation.y = Math.sin(c.t * 1.5) * 0.6 + Math.sin(c.wiggle * 30) * c.wiggle;
     if (theme.collect === 'starfish') c.g.rotation.x = -0.5;
     if (theme.collect === 'pearl') c.g.rotation.y *= 0.3;
-    if (c.alive && leoLow && Math.hypot(leo.pos.x - c.pos.x, leo.pos.z - c.pos.z) < 0.85) collect(c);
+    if (c.alive && leoLow && Math.hypot(leo.pos.x - c.pos.x, leo.pos.z - c.pos.z) < 0.85) { collect(c); continue; }
+    // se Leo ci sta andando, aspetta; altrimenti dopo un po' sparisce e ricompare altrove
+    const going = leo.moving && Math.hypot(leo.target.x - c.pos.x, leo.target.z - c.pos.z) < 1;
+    if (!going) c.life -= dt;
+    c.glint -= dt;
+    if (c.glint <= 0) { c.glint = 1.6; particles.burst(c.g.position, [0xffffff, 0xfff3a0], 5, 1.2, { up: 0.8, gravity: 0.5, sz: 0.6, lifeT: 0.6 }); }
+    if (c.life < 3) c.g.scale.setScalar(1.25 * (0.85 + Math.abs(Math.sin(c.life * 6)) * 0.25));
+    if (c.alive && c.life <= 0) vanish(c);
   }
   for (const fr of [...fruits]) {
     if (fr.ready) { fr.g.position.y = 0.3 + Math.abs(Math.sin(time * 4)) * 0.05; if (leoLow && Math.hypot(leo.pos.x - fr.pos.x, leo.pos.z - fr.pos.z) < 0.8) eatFruit(fr); }
@@ -1573,6 +1667,7 @@ function frame() {
   sun.rotation.z = Math.sin(time * 0.5) * 0.08;
   moon.rotation.z = Math.sin(time * 0.4) * 0.1;
   if (skyStars.visible) skyStars.material.opacity = 0.75 + Math.sin(time * 3) * 0.25;
+  music.tick();
   updateAmbient(dt, time);
   updatePrints(dt);
   beach.update(dt);
