@@ -13,7 +13,7 @@ Un piccolo gioco 3D (three.js) per bimbi di 2–3 anni. Si gioca con **un dito**
 ## Provarlo sul telefono Android
 Il gioco è una pagina web installabile (PWA): non serve nessun negozio di app.
 
-1. Pubblicalo con GitHub Pages: su GitHub vai in **Settings → Pages → Source: GitHub Actions**. Il workflow `.github/workflows/pages.yml` lo pubblica a ogni push; l'indirizzo sarà tipo `https://<utente>.github.io/Mini-Leo-Game/`.
+1. Pubblicalo con GitHub Pages: su GitHub apri **Settings → Pages**, in *Source* scegli **Deploy from a branch**, poi il branch del gioco e la cartella **/ (root)**, e premi **Save**. Dopo un paio di minuti l'indirizzo sarà `https://<utente>.github.io/Mini-Leo-Game/`.
 2. Apri l'indirizzo con Chrome su Android, menu ⋮ → **Aggiungi a schermata Home / Installa app**.
 3. Si apre a schermo intero con l'icona di Leo e funziona anche **senza internet** dopo la prima apertura.
 
