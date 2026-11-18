@@ -1,0 +1,33 @@
+name: Crea APK Android
+on:
+  push:
+    branches: [main, claude/threejs-kids-game-android-m0nq63]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.14.3
+      - name: Compila APK
+        working-directory: android
+        run: gradle --no-daemon assembleRelease
+      - name: Prepara file
+        run: cp android/app/build/outputs/apk/release/app-release.apk MiniLeo.apk
+      - name: Pubblica come release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          name: Mini Leo (versione ${{ github.run_number }})
+          target_commitish: ${{ github.sha }}
+          make_latest: true
+          body: Scarica **MiniLeo.apk** qui sotto dal telefono Android e aprilo per installarlo.
+          files: MiniLeo.apk
