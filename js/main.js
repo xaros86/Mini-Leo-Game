@@ -1,11 +1,15 @@
 // Mini Leo - menù principale: sceglie il minigioco e gestisce schermo, audio e tocchi.
-// Ogni minigioco è un modulo che esporta `game` con: init(renderer), resize(), enter(), exit(), tap(x, y), frame(dt, time).
+// Ogni minigioco è un modulo che esporta `game` con: init(renderer), resize(), enter(), exit(), frame(dt, time)
+// e per i tocchi tap(x, y) oppure down/move/up(x, y, id) per trascinare.
 import * as THREE from './vendor/three.module.min.js';
 import { buzz } from './shared/utils.js';
 import { sfx, music, N } from './shared/audio.js';
 import { game as prato } from './games/prato.js';
+import { game as ombre } from './games/ombre.js';
+import { game as amici } from './games/amici.js';
+import { game as trenino } from './games/trenino.js';
 
-const GAMES = [prato, null, null]; // i bottoni 2 e 3 sono per i prossimi minigiochi
+const GAMES = [prato, ombre, amici, trenino]; // uno per bottone del menù (null = in arrivo)
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -14,7 +18,7 @@ document.body.prepend(renderer.domElement);
 
 let current = prato;     // il gioco che si vede (anche dietro al menù, come sfondo animato)
 let playing = false;     // true = si sta giocando, false = menù aperto
-current.init(renderer);
+current.init(renderer); current.ready = true;
 
 const menu = document.getElementById('menu');
 const home = document.getElementById('home');
@@ -45,7 +49,7 @@ function startGame(i) {
   goFullscreen(); keepAwake();
   setTimeout(() => {
     btn.classList.remove('go');
-    if (current !== g) { current.exit(); current = g; current.init(renderer); }
+    if (current !== g) { current.exit(); current = g; if (!g.ready) { g.init(renderer); g.ready = true; } else g.resize(); }
     playing = true;
     menu.classList.add('hide'); home.classList.add('show');
     current.enter();
@@ -101,8 +105,10 @@ renderer.domElement.addEventListener('pointerdown', (e) => {
   e.preventDefault();
   if (!playing) return;
   sfx.init();
-  current.tap(e.clientX, e.clientY);
+  if (current.down) current.down(e.clientX, e.clientY, e.pointerId); else current.tap(e.clientX, e.clientY);
 });
+window.addEventListener('pointermove', (e) => { if (playing && current.move) current.move(e.clientX, e.clientY, e.pointerId); });
+['pointerup', 'pointercancel'].forEach((ev) => window.addEventListener(ev, (e) => { if (playing && current.up) current.up(e.clientX, e.clientY, e.pointerId); }));
 ['contextmenu', 'gesturestart', 'dblclick'].forEach((ev) => document.addEventListener(ev, (e) => e.preventDefault()));
 document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 

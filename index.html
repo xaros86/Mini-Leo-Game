@@ -84,9 +84,9 @@
       color: #fff; letter-spacing: 1px;
       text-shadow: 0 3px 0 #f5892b, 0 6px 12px rgba(0,0,0,0.18);
     }
-    .games { display: flex; flex-direction: column; gap: 3vh; align-items: center; }
+    .games { display: grid; grid-template-columns: repeat(2, auto); gap: 4vmin; justify-items: center; }
     .game {
-      --s: min(24vh, 58vw);
+      --s: min(30vh, 40vw);
       width: var(--s); height: var(--s); border-radius: 50%;
       border: calc(var(--s) * 0.045) solid #fff; box-sizing: border-box;
       box-shadow: 0 calc(var(--s) * 0.05) 0 rgba(0,0,0,0.12), 0 10px 30px rgba(0,0,0,0.15);
@@ -94,13 +94,14 @@
     }
     .game:nth-child(2) { animation-delay: .5s; }
     .game:nth-child(3) { animation-delay: 1s; }
+    .game:nth-child(4) { animation-delay: 1.5s; }
     .game svg { width: 100%; height: 100%; display: block; }
     .game.soon { filter: saturate(.85); }
     .game.nope { animation: nope .5s ease; }
     .game.go { animation: go .35s ease forwards; }
     @media (orientation: landscape) {
-      .games { flex-direction: row; gap: 5vw; }
-      .game { --s: min(26vw, 56vh); }
+      .games { grid-template-columns: repeat(4, auto); gap: 3vw; }
+      .game { --s: min(20vw, 52vh); }
     }
     @keyframes breathe { from { transform: scale(1); } to { transform: scale(1.06); } }
     @keyframes nope { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-10deg); } 40% { transform: rotate(9deg); } 60% { transform: rotate(-6deg); } 80% { transform: rotate(4deg); } }
@@ -139,17 +140,43 @@
         <g transform="translate(36 168)"><ellipse rx="15" ry="12" fill="#ff3b3b"/><path d="M0-12v24" stroke="#222" stroke-width="2"/><circle cx="-6" cy="-3" r="2.6" fill="#222"/><circle cx="6" cy="-3" r="2.6" fill="#222"/><circle cx="-5" cy="6" r="2.3" fill="#222"/><circle cx="5" cy="6" r="2.3" fill="#222"/><circle cy="-13" r="6" fill="#222"/></g>
         <g transform="translate(166 160)"><path d="M0 0v26" stroke="#3d9e3a" stroke-width="4"/><g fill="#ff7bd5"><circle cx="0" cy="-10" r="7"/><circle cx="9.5" cy="-3" r="7"/><circle cx="6" cy="8" r="7"/><circle cx="-6" cy="8" r="7"/><circle cx="-9.5" cy="-3" r="7"/></g><circle r="6" fill="#ffe45c"/></g>
       </svg></div>
-      <div class="game soon" id="g2"><svg viewBox="0 0 200 200" aria-label="Presto un nuovo gioco">
-        <rect width="200" height="200" fill="#c9b8ff"/>
-        <circle cx="100" cy="100" r="70" fill="none" stroke="#fff" stroke-width="7" stroke-dasharray="14 14" stroke-linecap="round" opacity=".85"/>
-        <path d="M100 52q6 42 48 48q-42 6-48 48q-6-42-48-48q42-6 48-48z" fill="#fff3a0"/>
-        <circle cx="146" cy="58" r="6" fill="#fff"/><circle cx="56" cy="146" r="5" fill="#fff"/>
+      <div class="game" id="g2"><svg viewBox="0 0 200 200" aria-label="Le ombre di Leo">
+        <rect width="200" height="200" fill="#8fd0ff"/><ellipse cx="100" cy="200" rx="160" ry="80" fill="#8ed45e"/>
+        <g fill="#2c3658" opacity=".35"><rect x="52" y="78" width="14" height="40" rx="4"/><circle cx="59" cy="62" r="28"/><circle cx="40" cy="78" r="18"/><circle cx="78" cy="78" r="18"/></g>
+        <g transform="translate(70 0)"><g fill="#2c3658" opacity=".35"><ellipse cx="72" cy="88" rx="30" ry="22"/><circle cx="96" cy="66" r="18"/><rect x="52" y="100" width="9" height="20" rx="3"/><rect x="82" y="100" width="9" height="20" rx="3"/></g></g>
+        <g transform="translate(56 112)">
+          <rect x="-7" y="10" width="14" height="44" rx="4" fill="#a0673a"/>
+          <circle cx="0" cy="0" r="30" fill="#4cc25a"/><circle cx="-22" cy="16" r="19" fill="#4cc25a"/><circle cx="22" cy="16" r="19" fill="#3fae49"/>
+          <circle cx="-10" cy="-6" r="5" fill="#ff4d5e"/><circle cx="14" cy="4" r="5" fill="#ff4d5e"/><circle cx="-2" cy="14" r="5" fill="#ff4d5e"/>
+        </g>
+        <path d="M92 132q22-26 42-36" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="2 12"/>
+        <path d="M126 86l14 8-14 8z" fill="#fff"/>
       </svg></div>
-      <div class="game soon" id="g3"><svg viewBox="0 0 200 200" aria-label="Presto un nuovo gioco">
-        <rect width="200" height="200" fill="#ffc9a8"/>
-        <circle cx="100" cy="100" r="70" fill="none" stroke="#fff" stroke-width="7" stroke-dasharray="14 14" stroke-linecap="round" opacity=".85"/>
-        <path d="M100 52q6 42 48 48q-42 6-48 48q-6-42-48-48q42-6 48-48z" fill="#ffffff"/>
-        <circle cx="146" cy="58" r="6" fill="#fff"/><circle cx="56" cy="146" r="5" fill="#fff"/>
+      <div class="game" id="g3"><svg viewBox="0 0 200 200" aria-label="Aiuta gli amici">
+        <rect width="200" height="200" fill="#ffe3a8"/><ellipse cx="100" cy="205" rx="160" ry="70" fill="#8ed45e"/>
+        <g fill="#fff"><circle cx="135" cy="58" r="30"/><circle cx="110" cy="62" r="20"/><circle cx="160" cy="64" r="20"/><circle cx="104" cy="96" r="7"/><circle cx="96" cy="110" r="4"/></g>
+        <g transform="translate(135 60) rotate(30)"><path d="M0-24l9 34H-9z" fill="#ff8a2a" transform="rotate(180)"/><path d="M-6-28q6-12 6 0q0-12 6 0" stroke="#4cb847" stroke-width="5" fill="none" transform="translate(0 2)"/></g>
+        <g transform="translate(78 140)">
+          <ellipse cx="-14" cy="-62" rx="9" ry="28" fill="#f2f2f7"/><ellipse cx="14" cy="-62" rx="9" ry="28" fill="#f2f2f7"/>
+          <ellipse cx="-14" cy="-60" rx="4.5" ry="20" fill="#ffb3c8"/><ellipse cx="14" cy="-60" rx="4.5" ry="20" fill="#ffb3c8"/>
+          <ellipse cx="0" cy="22" rx="30" ry="28" fill="#f2f2f7"/>
+          <circle r="30" fill="#f2f2f7"/>
+          <circle cx="-11" cy="-4" r="5.5" fill="#222"/><circle cx="11" cy="-4" r="5.5" fill="#222"/><circle cx="-9" cy="-6" r="2" fill="#fff"/><circle cx="13" cy="-6" r="2" fill="#fff"/>
+          <ellipse cx="0" cy="7" rx="5" ry="4" fill="#ff9ab8"/><path d="M-6 13q6 6 12 0" stroke="#8a4a5a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <ellipse cx="-20" cy="8" rx="6" ry="4" fill="#ffb3c8"/><ellipse cx="20" cy="8" rx="6" ry="4" fill="#ffb3c8"/>
+        </g>
+      </svg></div>
+      <div class="game" id="g4"><svg viewBox="0 0 200 200" aria-label="Il trenino dei colori">
+        <rect width="200" height="200" fill="#b8e6ff"/><rect y="138" width="200" height="62" fill="#8ed45e"/>
+        <rect y="136" width="200" height="6" fill="#9aa0b0"/>
+        <g transform="translate(0 4)">
+          <rect x="14" y="98" width="40" height="30" rx="5" fill="#ffd93d"/><rect x="58" y="98" width="40" height="30" rx="5" fill="#4d96ff"/><rect x="102" y="98" width="40" height="30" rx="5" fill="#ff5d73"/>
+          <g fill="#6bcb77"><circle cx="34" cy="92" r="9"/><circle cx="34" cy="80" r="7"/></g><g fill="#ffb03a"><circle cx="78" cy="92" r="9"/><circle cx="78" cy="80" r="7"/></g>
+          <rect x="146" y="88" width="40" height="40" rx="6" fill="#5a6c9a"/><rect x="146" y="70" width="22" height="22" rx="3" fill="#ff5d73"/><rect x="172" y="62" width="9" height="26" rx="3" fill="#333344"/>
+          <circle cx="186" cy="108" r="11" fill="#e8ecf4"/><circle cx="183" cy="105" r="2" fill="#222"/><circle cx="190" cy="105" r="2" fill="#222"/><path d="M182 112q4 4 8 0" stroke="#222" stroke-width="2" fill="none"/>
+          <g fill="#333344"><circle cx="24" cy="130" r="7"/><circle cx="44" cy="130" r="7"/><circle cx="68" cy="130" r="7"/><circle cx="88" cy="130" r="7"/><circle cx="112" cy="130" r="7"/><circle cx="132" cy="130" r="7"/><circle cx="156" cy="130" r="8"/><circle cx="176" cy="130" r="8"/></g>
+          <g fill="#fff" opacity=".9"><circle cx="178" cy="48" r="8"/><circle cx="164" cy="34" r="10"/><circle cx="144" cy="22" r="12"/></g>
+        </g>
       </svg></div>
     </div>
   </div>

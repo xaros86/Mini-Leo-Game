@@ -270,7 +270,7 @@ const leo = createLeo({ parent: scene, gravity: G, jumpFactor: JF, clampTarget: 
 
 // ================================================================ costruttori degli oggetti dei mondi
 // ---- alberi
-function meadowTree(dark = false) {
+export function meadowTree(dark = false) {
   const g = new THREE.Group();
   g.add(mesh(CYL, dark ? 0x6b4a3a : 0xa0673a, 0, 0.7, 0, 0.26, 1.4, 0.26));
   const leaf = dark ? pickOne([0x1f6b52, 0x24785a]) : pickOne([0x3fae49, 0x4cc25a, 0x36a043]);
@@ -278,7 +278,7 @@ function meadowTree(dark = false) {
   for (let i = 0; i < 4; i++) g.add(ball(0.13, dark ? glow(0xffd84d) : 0xff4d5e, rand(-0.8, 0.8), rand(1.5, 2.6), rand(0.6, 0.95)));
   return g;
 }
-function palmTree() {
+export function palmTree() {
   const g = new THREE.Group();
   let x = 0, y = 0;
   const lean = rand(-0.25, 0.25);
@@ -297,7 +297,7 @@ function palmTree() {
   g.userData.top = y;
   return g;
 }
-function pineTree() {
+export function pineTree() {
   const g = new THREE.Group();
   g.add(mesh(CYL, 0x8a5a3a, 0, 0.4, 0, 0.2, 0.8, 0.2));
   [[1.25, 1.1, 0.9], [1.0, 1.9, 0.95], [0.72, 2.6, 0.9]].forEach(([r, y, h]) => {
@@ -309,7 +309,7 @@ function pineTree() {
   return g;
 }
 const swayers = []; // cose che ondeggiano (alghe)
-function kelpTree() {
+export function kelpTree() {
   const g = new THREE.Group();
   for (let k = 0; k < 3; k++) {
     const strand = new THREE.Group(); strand.position.set((k - 1) * 0.5, 0, rand(-0.2, 0.2));
@@ -318,7 +318,7 @@ function kelpTree() {
   }
   return g;
 }
-function crystalTree() {
+export function crystalTree() {
   const g = new THREE.Group();
   [[0, 1.5, 0, 0.45, 3], [0.6, 0.9, 0.2, 0.3, 1.8], [-0.55, 1.0, -0.1, 0.32, 2], [0.2, 0.6, 0.5, 0.22, 1.2], [-0.3, 0.5, 0.45, 0.2, 1]].forEach(([x, y, z, r, h], i) => {
     const c = mesh(new THREE.ConeGeometry(1, 1, 6), glow(pickOne([0x7af0ff, 0xff8af0, 0xb18aff])), x, y, z, r, h, r);
@@ -328,14 +328,14 @@ function crystalTree() {
   halo.position.y = 1.5; halo.scale.setScalar(4); g.add(halo);
   return g;
 }
-function cityTree() {
+export function cityTree() {
   const g = new THREE.Group();
   g.add(mesh(CYL, 0xb8b0a8, 0, 0.2, 0, 0.55, 0.4, 0.55), mesh(CYL, 0x7a5a3a, 0, 0.42, 0, 0.5, 0.05, 0.5));
   g.add(mesh(CYL, 0x8a5a3a, 0, 1.0, 0, 0.14, 1.2, 0.14));
   g.add(ball(0.85, pickOne([0x4cc25a, 0x3fae49]), 0, 2.0, 0, 1, 0.95, 1));
   return g;
 }
-function lollipopTree() {
+export function lollipopTree() {
   const g = new THREE.Group();
   g.add(mesh(CYL, 0xffffff, 0, 1.0, 0, 0.09, 2.0, 0.09));
   const c1 = pickOne([0xff5d73, 0x7bd3ff, 0xb46bff, 0x6bcb77]);
@@ -346,7 +346,7 @@ function lollipopTree() {
   return g;
 }
 // ---- frutti che cadono dagli alberi
-function makeFruit(kind) {
+export function makeFruit(kind) {
   const g = new THREE.Group();
   if (kind === 'apple') { g.add(ball(0.28, 0xff4d5e), mesh(CYL, 0x7a4a24, 0, 0.3, 0, 0.03, 0.15, 0.03)); const l = ball(0.1, 0x4cc25a, 0.1, 0.33, 0, 1.5, 0.5, 0.8); g.add(l); }
   if (kind === 'golden') { g.add(ball(0.28, glow(0xffd84d)), mesh(CYL, 0x7a4a24, 0, 0.3, 0, 0.03, 0.15, 0.03)); }
@@ -386,7 +386,7 @@ function face(g, z, s = 1, color = 0x3b2a20) {
   [-0.1, 0.1].forEach((x) => g.add(ball(0.045 * s, color, x * s, 0.04 * s, z, 1, 1.4, 0.6)));
   g.add(smile(0.06 * s, color, 0, -0.05 * s, z));
 }
-function makeCollectible(kind) {
+export function makeCollectible(kind) {
   const g = new THREE.Group();
   if (kind === 'star') { g.add(new THREE.Mesh(starGeo, toon(0xffd23f, { emissive: 0x664400 }))); face(g, 0.15); }
   if (kind === 'nightstar') {
@@ -474,7 +474,7 @@ const HUD_ICON = {
 const BALLOON_GEO = new THREE.SphereGeometry(0.55, 24, 18);
 const STRING_GEO = new THREE.BufferGeometry().setFromPoints(Array.from({ length: 8 }, (_, i) => new THREE.Vector3(Math.sin(i * 1.3) * 0.06, -0.75 - i * 0.14, 0)));
 const STRING_MAT = new THREE.LineBasicMaterial({ color: 0xffffff });
-function makeFloater(kind) {
+export function makeFloater(kind) {
   const g = new THREE.Group();
   let color = pickOne(PALETTE);
   if (kind === 'balloon') {
@@ -517,7 +517,7 @@ function makeFloater(kind) {
 }
 // ---- cose che nascono dove si tocca
 const STEM = new THREE.CylinderGeometry(0.035, 0.045, 0.45, 6).translate(0, 0.225, 0);
-function makeSprout(kind) {
+export function makeSprout(kind) {
   const g = new THREE.Group();
   let color = pickOne(PALETTE);
   if (kind === 'flower') {
@@ -608,7 +608,7 @@ function makeSprout(kind) {
 // ---- amici (si toccano e fanno una magia)
 const WING_GEO = new THREE.CircleGeometry(0.3, 16).translate(0.28, 0.05, 0);
 const CAPSULE = new THREE.CapsuleGeometry(0.06, 0.32, 4, 8);
-function makeFriend(kind) {
+export function makeFriend(kind, standalone = false) { // standalone: solo il modello, per gli altri minigiochi
   const g = new THREE.Group();
   const f = { kind, g, pos: randomSpot(), vel: new THREE.Vector3(), target: randomSpot(), t: rand(0, 5), actT: 0, flying: kind === 'butterfly' || kind === 'firefly' };
   if (kind === 'butterfly') {
@@ -789,6 +789,7 @@ function makeFriend(kind) {
   f.pos.y = f.flying ? 2 : 0;
   f.newTarget = () => { f.target.copy(randomSpot(0.6)); f.target.y = f.flying ? rand(1.4, 2.8) : 0; };
   f.newTarget();
+  if (standalone) return f;
   f.shadow = blobShadow(f.flying ? 0.6 : 1.0);
   world.add(g);
   return f;
@@ -943,7 +944,7 @@ function buildCandy() {
 }
 
 // ================================================================ i mondi
-const THEMES = [
+export const THEMES = [
   {
     id: 'prato', sky: ['#4fb3ff', '#a9dcff', '#e6f7ff'], fog: [0xd6f0ff, 35, 80], ground: 0x7fd65b, patches: [0x95e36b, 0x6cc94e],
     hills: [0x5cbf4a, 0x6fcf55, 0x58b845], light: [0xffffff, 0x88cc77, 1.6, 1.8], skyObj: 'sun',
