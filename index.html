@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#6ec6ff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Mini Leo</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <style>
+    html, body {
+      margin: 0; height: 100%; overflow: hidden;
+      background: #6ec6ff;
+      touch-action: none;
+      overscroll-behavior: none;
+      -webkit-user-select: none; user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
+
+    /* Stelle raccolte (in alto) */
+    #hud {
+      position: fixed; top: max(12px, env(safe-area-inset-top)); left: 50%;
+      transform: translateX(-50%);
+      display: flex; gap: 6px; padding: 8px 14px;
+      background: rgba(255,255,255,0.55); border-radius: 40px;
+      pointer-events: none;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.08);
+    }
+    #hud svg { width: 40px; height: 40px; transition: transform .2s; }
+    #hud svg path { fill: rgba(255,255,255,0.9); stroke: #c9b9e6; stroke-width: 3; stroke-linejoin: round; transition: fill .2s; }
+    #hud svg.on path { fill: #ffd23f; stroke: #f0a500; }
+    #hud svg.on { animation: pop .5s cubic-bezier(.3,1.8,.5,1); }
+    #hud.party svg { animation: dance .5s ease-in-out infinite alternate; }
+    #hud.party svg:nth-child(2n) { animation-delay: .25s; }
+    @keyframes pop { 0% { transform: scale(.2); } 100% { transform: scale(1); } }
+    @keyframes dance { from { transform: translateY(0) rotate(-12deg) scale(1.1); } to { transform: translateY(-6px) rotate(12deg) scale(1.2); } }
+
+    /* Schermata iniziale: un solo grande bottone */
+    #start {
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: rgba(110,198,255,0.35);
+      transition: opacity .5s;
+    }
+    #start.hide { opacity: 0; pointer-events: none; }
+    #play {
+      width: 170px; height: 170px; border-radius: 50%;
+      background: #5ccf5c; border: 10px solid #fff;
+      box-shadow: 0 10px 0 #3a9e3a, 0 14px 30px rgba(0,0,0,.25);
+      display: flex; align-items: center; justify-content: center;
+      animation: breathe 1.2s ease-in-out infinite alternate;
+    }
+    #play::after {
+      content: ""; margin-left: 18px;
+      border-left: 62px solid #fff; border-top: 40px solid transparent; border-bottom: 40px solid transparent;
+    }
+    @keyframes breathe { from { transform: scale(1); } to { transform: scale(1.1); } }
+  </style>
+</head>
+<body>
+  <div id="hud"></div>
+  <div id="start"><div id="play"></div></div>
+  <script type="module" src="js/main.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    }
+  </script>
+</body>
+</html>
