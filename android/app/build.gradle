@@ -1,0 +1,54 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Il gioco (index.html, js/, icons/) viene copiato dentro l'APK ad ogni build.
+def webDir = layout.buildDirectory.dir("webassets")
+tasks.register('copyWebAssets', Copy) {
+    from(rootProject.file('..')) {
+        include 'index.html', 'manifest.webmanifest', 'js/**', 'icons/**'
+    }
+    into webDir
+}
+preBuild.dependsOn 'copyWebAssets'
+
+android {
+    namespace 'it.minileo.game'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'it.minileo.game'
+        minSdk 24
+        targetSdk 35
+        versionCode((System.getenv('GITHUB_RUN_NUMBER') ?: '1').toInteger())
+        versionName "1.0." + (System.getenv('GITHUB_RUN_NUMBER') ?: '0')
+    }
+
+    // Chiave di firma fissa (non segreta, solo per questa app di famiglia):
+    // così ogni nuova versione si installa sopra la precedente.
+    signingConfigs {
+        family {
+            storeFile rootProject.file('minileo.keystore')
+            storePassword 'minileo123'
+            keyAlias 'minileo'
+            keyPassword 'minileo123'
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.family
+        }
+    }
+    sourceSets {
+        main { assets.srcDirs += webDir }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+}

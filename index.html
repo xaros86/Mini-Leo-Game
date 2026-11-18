@@ -66,7 +66,7 @@
   <div id="start"><div id="play"></div></div>
   <script type="module" src="js/main.js"></script>
   <script>
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && location.hostname !== 'appassets.androidplatform.net') {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
     }
   </script>
