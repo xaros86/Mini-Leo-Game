@@ -8,8 +8,10 @@ import { game as prato } from './games/prato.js';
 import { game as ombre } from './games/ombre.js';
 import { game as amici } from './games/amici.js';
 import { game as trenino } from './games/trenino.js';
+import { game as cucu } from './games/cucu.js';
+import { game as bagnetto } from './games/bagnetto.js';
 
-const GAMES = [prato, ombre, amici, trenino]; // uno per bottone del menù (null = in arrivo)
+const GAMES = [prato, ombre, amici, trenino, cucu, bagnetto]; // uno per bottone del menù (null = in arrivo)
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));

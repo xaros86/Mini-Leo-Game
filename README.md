@@ -3,11 +3,13 @@
 Un piccolo gioco 3D (three.js) per bimbi di 2–3 anni. Si gioca con **un dito**, anche con il telefono appoggiato sul tavolo, in verticale o in orizzontale. Niente testi, niente sconfitte, niente pubblicità: solo colori e suoni allegri.
 
 ## Menù
-All'avvio c'è un menù con **4 grandi bottoni**, uno per minigioco:
+All'avvio c'è un menù con **6 grandi bottoni**, uno per minigioco:
 1. 🦁 **Il prato di Leo** – esplorare, scoprire, raccogliere (10 mondi)
 2. 🧩 **Le ombre di Leo** – trascina ogni oggetto sulla sua ombra
 3. 🎁 **Aiuta gli amici** – dai a ogni amico ciò che desidera
 4. 🚂 **Il trenino dei colori** – metti ogni orsetto nel vagone del suo colore
+5. 🙈 **Cucù! Dov'è Leo?** – trova Leo nascosto
+6. 🛁 **Il bagnetto di Leo** – lava, sciacqua e asciuga Leo
 
 Nei giochi, la **casetta in alto a destra** riporta al menù: va **tenuta premuta 2 secondi** (si riempie un cerchio giallo), così il bimbo non esce per sbaglio. Il bottoncino ♫ della musica è in alto a sinistra.
 
@@ -19,6 +21,12 @@ Dalla porta della **casetta** (con il camino che fuma, il vialetto e la staccion
 
 ## Il trenino dei colori – la stazione
 Nella **stazione** (edificio con l'orologio, panchina, lampioni, fioriere, il paesino sullo sfondo) gli **orsetti gommosi** colorati aspettano sulla banchina: si trascinano nel vagone del loro colore (2 posti per vagone). Nel vagone sbagliato l'orsetto torna sulla banchina. Quando il treno è pieno fischia, sbuffa e parte entrando nella **galleria** della collina, e ne arriva un altro con più vagoni e colori nuovi.
+
+## Cucù! Dov'è Leo?
+Nel giardino ci sono dei nascondigli grandi (cespuglione, casetta, botte, pacco regalo gigante, balla di fieno). Leo saluta, corre a nascondersi e il bimbo tocca dove pensa che sia: se indovina Leo salta fuori ridendo (e si guadagna una stellina; 5 stelline = festa), se sbaglia dal nascondiglio esce una farfalla o un pulcino e si riprova. La difficoltà cresce piano: 2 nascondigli con un pezzo di criniera che spunta → 3 nascondigli → i nascondigli si scambiano di posto una volta (il gioco dei bicchieri) → 4 nascondigli e due scambi. Se il bimbo esita, il nascondiglio giusto ridacchia e dondola.
+
+## Il bagnetto di Leo
+Leo arriva sporco nella vasca. Gli attrezzi sono sullo sgabello e quello da usare luccica: con la **spugna** si strofina (via le macchie, arriva la schiuma), con la **doccetta** si sciacqua (via la schiuma), con l'**asciugamano** si avvolge e si strofina finché Leo è morbido e luccicante. Poi Leo esce a giocare e torna sporco in un altro modo: fango, pittura colorata, cioccolato con le codette. Sempre attivi: la paperella (squit!) e le bolle di sapone da scoppiare.
 
 ## Il prato di Leo: come si gioca
 - **Tocca il terreno** → nasce qualcosa (fiore, carota, castello di sabbia, corallo, pupazzo di neve, felce, funghetto, cristallo…) con una nota musicale, e Leo corre lì saltellando.
@@ -75,7 +83,7 @@ Per evitare che il bimbo esca dal gioco, usa il **Blocco app sullo schermo** (Im
 - `js/shared/toon.js` – stile cartone animato: materiali, forme base, ombre
 - `js/shared/utils.js` – piccole utilità
 - `js/games/prato.js` – minigioco 1, "Il prato di Leo" (10 mondi); esporta anche i modelli dei mondi
-- `js/games/ombre.js`, `js/games/amici.js`, `js/games/trenino.js` – minigiochi 2, 3 e 4
+- `js/games/ombre.js`, `js/games/amici.js`, `js/games/trenino.js`, `js/games/cucu.js`, `js/games/bagnetto.js` – minigiochi 2–6
 - `js/shared/stage.js` – palcoscenico comune (cielo, prato, telecamera che si adatta allo schermo)
 - `js/shared/fx.js` – animazioni, coriandoli, aiuti
 - `js/shared/decor.js` – decorazioni degli scenari (alberi, cespugli, fiori, sassi, farfalle) adatte a ogni mondo
