@@ -11,14 +11,14 @@ All'avvio c'è un menù con **4 grandi bottoni**, uno per minigioco:
 
 Nei giochi, la **casetta in alto a destra** riporta al menù: va **tenuta premuta 2 secondi** (si riempie un cerchio giallo), così il bimbo non esce per sbaglio. Il bottoncino ♫ della musica è in alto a sinistra.
 
-## Le ombre di Leo
-In alto ci sono le **ombre** (sagome scure) degli oggetti dei mondi, in basso gli oggetti colorati mescolati. Si trascina ogni oggetto sulla sua ombra: quando è vicino l'ombra si illumina e, lasciandolo, ci scivola dentro; se non è quella giusta l'oggetto torna dolcemente al suo posto. A scena completa tutto prende vita (gli oggetti saltano, gli animali fanno il loro verso) e si passa alla scena successiva: 8 scene da 2 a 5 pezzi (prato, fattoria, spiaggia, città, neve, dinosauri, fattoria grande, spazio). Se il bimbo non sa da dove cominciare, dopo qualche secondo un oggetto e la sua ombra lo aiutano dondolando.
+## Le ombre di Leo – il teatrino delle ombre
+In fondo c'è un **teatrino** con le tende rosse: sul telo luminoso ci sono le **ombre** (sagome nere viste di fronte) degli oggetti dei mondi; gli oggetti aspettano davanti, su una **coperta da picnic**. Si trascina ogni oggetto sulla sua ombra: l'ombra si illumina e, lasciandolo, l'oggetto va sul palco davanti alla sua ombra; se non è quella giusta torna dolcemente al suo posto. Tra una scena e l'altra le tende si chiudono e si riaprono. A scena completa tutto prende vita (gli oggetti saltano, gli animali fanno il loro verso) e si passa alla scena successiva: 8 scene da 2 a 5 pezzi (prato, fattoria, spiaggia, città, neve, dinosauri, fattoria grande, spazio). Se il bimbo non sa da dove cominciare, dopo qualche secondo un oggetto e la sua ombra lo aiutano dondolando.
 
-## Aiuta gli amici
-Arriva un amico con la **nuvoletta** di ciò che desidera: coniglio → carota, scimmia → banana, cane → osso, pinguino → pesce, topolino → formaggio. Il bimbo tocca l'oggetto giusto e Leo lo prende e glielo porta. Si parte con 2 scelte, poi 3; dal secondo giro la nuvoletta sparisce dopo qualche secondo (bisogna ricordarsi o *sapere* cosa vuole l'amico) e ricompare se si sbaglia o se si tocca l'amico. Ogni 5 amici aiutati c'è una piccola festa.
+## Aiuta gli amici – la casetta e il banchetto
+Dalla porta della **casetta** (con il camino che fuma, il vialetto e la staccionata) esce un amico con la **nuvoletta** di ciò che desidera: coniglio → carota, scimmia → banana, cane → osso, pinguino → pesce, topolino → formaggio. Gli oggetti sono esposti sul **banchetto del mercato**: il bimbo tocca quello giusto, Leo lo prende e glielo porta, e l'amico torna a casa contento. Si parte con 2 scelte, poi 3; dal secondo giro la nuvoletta sparisce dopo qualche secondo (bisogna ricordarsi o *sapere* cosa vuole l'amico) e ricompare se si sbaglia o se si tocca l'amico. Ogni 5 amici aiutati c'è una piccola festa.
 
-## Il trenino dei colori
-Gli **orsetti gommosi** colorati aspettano sulla banchina: si trascinano nel vagone del loro colore (2 posti per vagone). Nel vagone sbagliato l'orsetto torna sulla banchina. Quando il treno è pieno fischia, sbuffa e parte, e ne arriva un altro con più vagoni e colori nuovi.
+## Il trenino dei colori – la stazione
+Nella **stazione** (edificio con l'orologio, panchina, lampioni, fioriere, il paesino sullo sfondo) gli **orsetti gommosi** colorati aspettano sulla banchina: si trascinano nel vagone del loro colore (2 posti per vagone). Nel vagone sbagliato l'orsetto torna sulla banchina. Quando il treno è pieno fischia, sbuffa e parte entrando nella **galleria** della collina, e ne arriva un altro con più vagoni e colori nuovi.
 
 ## Il prato di Leo: come si gioca
 - **Tocca il terreno** → nasce qualcosa (fiore, carota, castello di sabbia, corallo, pupazzo di neve, felce, funghetto, cristallo…) con una nota musicale, e Leo corre lì saltellando.
@@ -78,6 +78,7 @@ Per evitare che il bimbo esca dal gioco, usa il **Blocco app sullo schermo** (Im
 - `js/games/ombre.js`, `js/games/amici.js`, `js/games/trenino.js` – minigiochi 2, 3 e 4
 - `js/shared/stage.js` – palcoscenico comune (cielo, prato, telecamera che si adatta allo schermo)
 - `js/shared/fx.js` – animazioni, coriandoli, aiuti
+- `js/shared/decor.js` – decorazioni degli scenari (alberi, cespugli, fiori, sassi, farfalle) adatte a ogni mondo
 - `js/vendor/three.module.min.js` – three.js r170 (incluso, funziona offline)
 - `android/` – progetto Android (WebView) per l'APK
 - `manifest.webmanifest`, `sw.js`, `icons/` – installazione come web app e funzionamento offline

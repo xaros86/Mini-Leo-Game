@@ -1,6 +1,6 @@
 // Funziona anche senza internet dopo la prima apertura.
-const CACHE = 'mini-leo-v8';
-const FILES = ['./', './index.html', './manifest.webmanifest', './js/main.js', './js/games/prato.js', './js/shared/utils.js', './js/shared/audio.js', './js/shared/toon.js', './js/shared/leo.js', './js/shared/stage.js', './js/shared/fx.js', './js/games/ombre.js', './js/games/amici.js', './js/games/trenino.js', './js/vendor/three.module.min.js', './icons/icon-192.png', './icons/icon-512.png'];
+const CACHE = 'mini-leo-v9';
+const FILES = ['./', './index.html', './manifest.webmanifest', './js/main.js', './js/games/prato.js', './js/shared/utils.js', './js/shared/audio.js', './js/shared/toon.js', './js/shared/leo.js', './js/shared/stage.js', './js/shared/fx.js', './js/shared/decor.js', './js/games/ombre.js', './js/games/amici.js', './js/games/trenino.js', './js/vendor/three.module.min.js', './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))));
