@@ -80,7 +80,7 @@ const PAIRS = [
 
 const stage = createStage();
 // area di gioco: stretta e alta in verticale, larga e bassa in orizzontale
-const fitStage = () => { const aspect = window.innerWidth / window.innerHeight; stage.fit(aspect < 1 ? { w: 6.4 } : { w: 10.5 }); };
+const fitStage = () => { const aspect = window.innerWidth / window.innerHeight; stage.fit(aspect < 1 ? { w: 6.4 } : { w: 15 }); };
 const { scene, camera } = stage;
 const tweens = createTweens();
 const particles = createParticles(scene);
@@ -112,7 +112,7 @@ function newRound() {
   pair = PAIRS[order.shift()];
   const b = stage.bounds, side = Math.random() < 0.5 ? -1 : 1;
   // l'amico arriva camminando da un lato
-  const g = new THREE.Group(); g.add(pair.animal());
+  const g = new THREE.Group(); g.add(pair.animal()); g.children[0].scale.multiplyScalar(1.35);
   const shadow = blobShadow(1, level);
   friend = { g, side, spot: new THREE.Vector3(side * Math.min(b.xHalf * 0.5, 2.6), 0, b.zMin + 2.2), target: null, t: 0, shadow };
   g.position.set(side * (b.xHalf + 2.5), 0, friend.spot.z);
@@ -130,7 +130,7 @@ function newRound() {
     const x = n === 1 ? 0 : -span + (2 * span * i) / (n - 1);
     const base = new THREE.Group(); base.position.set(x, 0, b.zMax - 1.0);
     base.add(mesh(CYL, 0xf5e6c8, 0, 0.12, 0, 0.5, 0.24, 0.5), mesh(CYL, 0xe8d4b0, 0, 0.25, 0, 0.52, 0.04, 0.52));
-    const item = normalize(p.item(), 1.1); item.position.y = 0.27; base.add(item);
+    const item = normalize(p.item(), 1.3); item.position.y = 0.27; base.add(item);
     base.scale.setScalar(0.01); level.add(base);
     tweens.add(0.4, (k) => base.scale.setScalar(Math.max(0.01, k)));
     return { pair: p, base, item, t: rand(0, 6) };

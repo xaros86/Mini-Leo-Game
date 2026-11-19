@@ -30,7 +30,7 @@ let SNAP = 1.5; // quanto vicino all'ombra bisogna lasciare l'oggetto (generoso,
 
 const stage = createStage();
 // area di gioco: stretta e alta in verticale, larga e bassa in orizzontale
-const fitStage = () => { const aspect = window.innerWidth / window.innerHeight; stage.fit(aspect < 1 ? { w: 6.6 } : { w: 11 }); };
+const fitStage = () => { const aspect = window.innerWidth / window.innerHeight; stage.fit(aspect < 1 ? { w: 6.6 } : { w: 16 }); };
 const { scene, camera } = stage;
 const tweens = createTweens();
 const particles = createParticles(scene);
@@ -70,7 +70,7 @@ function buildLevel(i) {
   const trayOrder = shuffle([...Array(n).keys()]);
   const traySpan = Math.min(b.xHalf - 0.7, (portrait ? 1.5 : 2.2) * (n - 1) / 2);
   L.pieces.forEach(([name, make, voice, size], k) => {
-    const model = normalize(make(), size || 1.3);
+    const model = normalize(make(), (size || 1.3) * 1.2);
     const ghost = ghostOf(model);
     ghost.position.copy(slotPos[k]); level.add(ghost);
     const t = trayOrder.indexOf(k);
@@ -79,7 +79,7 @@ function buildLevel(i) {
     const shadow = blobShadow(Math.max(0.8, (size || 1.3) * 0.8), level); shadow.position.set(home.x, SHY, home.z);
     pieces.push({ name, voice, model, ghost, slot: slotPos[k], home, shadow, placed: false, t: Math.random() * 6, wig: 0 });
   });
-  leo.pos.set(portrait ? b.xHalf - 0.7 : b.xHalf - 0.9, 0, portrait ? b.zMin + 6.2 : b.zMin + 3.6); leo.target.copy(leo.pos); leo.moving = false;
+  leo.pos.set(portrait ? b.xHalf - 0.8 : b.xHalf - 1.6, 0, portrait ? b.zMin + 6.2 : b.zMin + 2.6); leo.target.copy(leo.pos); leo.moving = false;
   leo.outfit(L.world);
 }
 
@@ -112,7 +112,7 @@ function place(p) {
 
 function sendHome(p) {
   const from = p.model.position.clone();
-  tweens.add(0.45, (k) => { p.model.position.lerpVectors(from, p.home, k); p.model.position.y = Math.sin(k * Math.PI) * 0.8; });
+  p.tw = tweens.add(0.45, (k) => { p.model.position.lerpVectors(from, p.home, k); p.model.position.y = Math.sin(k * Math.PI) * 0.8; });
   sfx.note(N(9), { vol: 0.04, dur: 0.25 });
 }
 
@@ -151,6 +151,7 @@ export const game = {
     const p = pickPiece(x, y);
     if (!p) return;
     drag = { p, id };
+    tweens.cancel(p.tw); // se stava tornando al suo posto, si ferma: ora lo tiene il dito
     sfx.note(N(19), { vol: 0.04, dur: 0.2 });
     p.model.scale.multiplyScalar(1.12);
   },

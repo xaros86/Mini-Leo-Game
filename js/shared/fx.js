@@ -5,11 +5,14 @@ import { rand, pickOne } from './utils.js';
 export function createTweens() {
   const list = [];
   return {
-    add(dur, fn, done) { list.push({ t: 0, dur, fn, done }); },
+    add(dur, fn, done) { const tw = { t: 0, dur, fn, done, dead: false }; list.push(tw); return tw; },
+    cancel(tw) { if (tw) tw.dead = true; },
     clear() { list.length = 0; },
     update(dt) {
       for (let i = list.length - 1; i >= 0; i--) {
-        const tw = list[i]; tw.t += dt;
+        const tw = list[i];
+        if (tw.dead) { list.splice(i, 1); continue; }
+        tw.t += dt;
         const k = Math.min(1, tw.t / tw.dur); tw.fn(k);
         if (k >= 1) { list.splice(i, 1); tw.done && tw.done(); }
       }

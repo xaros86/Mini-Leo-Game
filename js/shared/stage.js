@@ -47,6 +47,7 @@ export function createStage() {
   // telecamera: inquadra sempre un prato largo almeno `width`*2 unità, in verticale e in orizzontale
   st.layout = ({ tilt = 0.5, width = 5, target = new THREE.Vector3(0, 0.5, -1), base = 15 } = {}) => {
     st.W = window.innerWidth; st.H = window.innerHeight;
+    camera.fov = 45;
     camera.aspect = st.W / st.H;
     const halfV = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     const k = Math.max(1, width / (halfV * base * camera.aspect));
@@ -59,8 +60,9 @@ export function createStage() {
   };
   // inquadratura per i giochi "da tavolo": il bordo basso dello schermo mostra un prato largo esattamente w,
   // la profondità si adatta allo schermo (in alto resta spazio per i bottoni). Riempie sempre tutto lo schermo.
-  st.fit = ({ w, tilt = 1.1, top = 0.78, tall = 1.8, maxD = 12 }) => {
+  st.fit = ({ w, tilt = 1.4, top = 0.78, tall = 1.8, maxD = 12, fov = 30 }) => {
     st.W = window.innerWidth; st.H = window.innerHeight;
+    camera.fov = fov; // obiettivo stretto: poca prospettiva, le cose in fondo restano grandi
     camera.aspect = st.W / st.H; camera.updateProjectionMatrix();
     const dir = new THREE.Vector3(0, tilt, 0.8).normalize(), origin = new THREE.Vector3();
     const place = (dist) => { camera.position.copy(origin).addScaledVector(dir, dist); camera.lookAt(origin); camera.updateMatrixWorld(); };

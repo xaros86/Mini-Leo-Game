@@ -58,7 +58,7 @@ function locomotive() {
 
 const stage = createStage();
 // area di gioco: stretta e alta in verticale, larga e bassa in orizzontale
-const fitStage = () => { const aspect = window.innerWidth / window.innerHeight; stage.fit(aspect < 1 ? { w: 7 } : { w: 11 }); };
+const fitStage = () => { const aspect = window.innerWidth / window.innerHeight; stage.fit(aspect < 1 ? { w: 8 } : { w: 15 }); };
 const { scene, camera } = stage;
 const tweens = createTweens();
 const particles = createParticles(scene);
@@ -75,7 +75,7 @@ function buildScenery() {
   for (let x = -30; x <= 30; x += 0.7) level.add(mesh(BOX, 0x9a6a44, x, 0.03, railZ, 0.25, 0.04, 1.2));
   level.add(mesh(BOX, 0xe8dcc8, 0, 0.06, (railZ + 1 + b.zMax + 1.5) / 2, 80, 0.1, b.zMax + 1.5 - railZ - 1));
   level.add(mesh(BOX, 0xffd23f, 0, 0.12, railZ + 1.05, 80, 0.03, 0.12));
-  const house = new THREE.Group(); house.position.set(-b.xHalf - 1.5, 0, railZ - 2.6); level.add(house);
+  const house = new THREE.Group(); house.position.set(-b.xHalf - 0.5, 0, railZ - 3.4); level.add(house);
   house.add(mesh(BOX, 0xffb0a0, 0, 0.9, 0, 2.6, 1.8, 1.6));
   const roof = mesh(new THREE.ConeGeometry(1, 1, 4), 0x8a3a3a, 0, 2.2, 0, 2.2, 0.9, 1.4); roof.rotation.y = Math.PI / 4; house.add(roof);
   house.add(mesh(BOX, 0x7a4a2a, 0.5, 0.55, 0.81, 0.5, 1.1, 0.04), mesh(CYL, 0xffffff, -0.5, 1.4, 0.81, 0.28, 0.04, 0.28)).children;
@@ -103,7 +103,7 @@ function newTrain() {
     const span = Math.min(b.xHalf - 0.6, 1.4 * (rowN - 1) / 2);
     const home = new THREE.Vector3(rowN === 1 ? 0 : -span + (2 * span * col) / (rowN - 1) + row * 0.3, 0.1, b.zMax - 0.9 - row * 1.5);
     const m = gummy(c); m.position.copy(home); m.scale.setScalar(0.01); level.add(m);
-    tweens.add(0.4, (k) => m.scale.setScalar(Math.max(0.01, k)));
+    tweens.add(0.4, (k) => m.scale.setScalar(Math.max(0.01, k * 1.25)));
     return { m, color: c, home, seated: false, t: rand(0, 6), shadow: blobShadow(0.8, level) };
   });
 }
@@ -130,7 +130,7 @@ function seat(bear, w) {
 }
 function sendHome(bear) {
   const from = bear.m.position.clone();
-  tweens.add(0.45, (k) => { bear.m.position.lerpVectors(from, bear.home, k); bear.m.position.y = bear.home.y + Math.sin(k * Math.PI) * 0.7; });
+  bear.tw = tweens.add(0.45, (k) => { bear.m.position.lerpVectors(from, bear.home, k); bear.m.position.y = bear.home.y + Math.sin(k * Math.PI) * 0.7; });
   sfx.note(N(9), { vol: 0.04, dur: 0.25 });
 }
 function depart() {
@@ -147,7 +147,7 @@ export const game = {
     stage.setTheme(THEMES.find((t) => t.id === 'citta'));
     fitStage();
     buildScenery();
-    leo.pos.set(-stage.bounds.xHalf + 0.7, 0, (railZ + stage.bounds.zMax) / 2 + 0.2); leo.target.copy(leo.pos);
+    leo.pos.set(-stage.bounds.xHalf + 1.3, 0, railZ + 2.2); leo.target.copy(leo.pos);
     newTrain(); this.ready = true;
   },
   resize() { fitStage(); },
@@ -160,8 +160,9 @@ export const game = {
     for (const b of bears) { if (b.seated) continue; const [sx, sy] = stage.toScreen(b.m.position.clone().setY(0.6)); const d = Math.hypot(sx - x, sy - y); if (d < bd) { bd = d; best = b; } }
     if (!best) return;
     drag = { b: best, id };
+    tweens.cancel(best.tw);
     sfx.note(N(19), { vol: 0.04, dur: 0.2 });
-    best.m.scale.setScalar(1.15);
+    best.m.scale.setScalar(1.45);
   },
   move(x, y, id) {
     if (!drag || drag.id !== id) return;
@@ -171,7 +172,7 @@ export const game = {
   },
   up(x, y, id) {
     if (!drag || drag.id !== id) return;
-    const b = drag.b; drag = null; b.m.scale.setScalar(1);
+    const b = drag.b; drag = null; b.m.scale.setScalar(1.25);
     const w = wagonAt(b.m.position);
     if (w && w.color === b.color && w.seats.length < SEATS) seat(b, w);
     else {
