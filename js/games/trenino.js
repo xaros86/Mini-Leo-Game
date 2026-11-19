@@ -17,24 +17,34 @@ const SEATS = 2, WAGON_L = 1.55;
 
 function gummy(color) {
   const g = new THREE.Group();
-  const gm = toon(color, { transparent: true, opacity: 0.88, emissive: new THREE.Color(color).multiplyScalar(0.25).getHex() });
+  const gm = toon(color, { emissive: new THREE.Color(color).multiplyScalar(0.25).getHex() });
   g.add(ball(0.3, gm, 0, 0.38, 0, 1, 1.15, 0.85), ball(0.24, gm, 0, 0.8, 0.02));
   [-1, 1].forEach((k) => { g.add(ball(0.09, gm, k * 0.17, 1.0, 0)); g.add(ball(0.1, gm, k * 0.27, 0.5, 0.05, 0.8, 1.1, 0.8)); g.add(ball(0.11, gm, k * 0.14, 0.08, 0.05, 1, 0.8, 1.1)); });
   [-0.08, 0.08].forEach((x) => { g.add(ball(0.04, 0xffffff, x, 0.85, 0.2)); g.add(ball(0.025, 0x3b2a20, x, 0.85, 0.235)); });
   g.add(ball(0.045, 0x3b2a20, 0, 0.77, 0.24, 1.2, 0.8, 0.6), smile(0.05, 0x3b2a20, 0, 0.71, 0.23));
+  // contorno nero da cartone animato: una copia un po' più grande, scura, vista "da dietro"
+  g.children.filter((m) => m.material === gm).forEach((m) => {
+    const o = new THREE.Mesh(m.geometry, OUTLINE);
+    o.position.copy(m.position); o.scale.copy(m.scale).multiplyScalar(1.12); o.rotation.copy(m.rotation);
+    g.add(o);
+  });
   return g;
 }
+const OUTLINE = new THREE.MeshBasicMaterial({ color: 0x1a1420, side: THREE.BackSide });
+// colore pastello per i vagoni: stesso colore degli orsetti ma più tenue, così gli orsetti risaltano
+const pastel = (c, k = 0.5) => new THREE.Color(c).lerp(new THREE.Color(0xffffff), k).getHex();
 function wheel(x, z) { const w = mesh(CYL, 0x333344, x, 0.22, z, 0.22, 0.1, 0.22); w.rotation.x = Math.PI / 2; w.add(mesh(CYL, 0xd8d8e0, 0, z > 0 ? 0.06 : -0.06, 0, 0.4, 0.2, 0.4)); return w; }
 function wagon(color) {
   const g = new THREE.Group();
   g.add(mesh(BOX, 0x444455, 0, 0.3, 0, WAGON_L - 0.1, 0.12, 0.8));
-  g.add(mesh(BOX, color, 0, 0.6, 0, WAGON_L - 0.15, 0.5, 0.9));
-  g.add(mesh(BOX, new THREE.Color(color).multiplyScalar(1.15).getHex(), 0, 0.87, 0, WAGON_L - 0.05, 0.08, 1.0));
+  g.add(mesh(BOX, pastel(color, 0.5), 0, 0.6, 0, WAGON_L - 0.15, 0.5, 0.9));
+  g.add(mesh(BOX, pastel(color, 0.25), 0, 0.87, 0, WAGON_L - 0.05, 0.08, 1.0));
+  g.add(mesh(BOX, pastel(color, 0.25), 0, 0.6, 0.455, WAGON_L - 0.5, 0.16, 0.01)); // fascia colorata sul fianco
   g.add(ball(0.12, glow(0xffffff, { transparent: true, opacity: 0.5 }), -0.45, 0.65, 0.46, 1, 1, 0.2));
   const wheels = [-0.45, 0.45].flatMap((x) => [wheel(x, 0.42), wheel(x, -0.42)]);
   wheels.forEach((w) => g.add(w));
   g.add(mesh(BOX, 0x666677, -WAGON_L / 2, 0.32, 0, 0.2, 0.06, 0.1));
-  return { g, wheels, color, seats: [], seatPos: [-0.33, 0.33].map((x) => new THREE.Vector3(x, 0.55, 0)) };
+  return { g, wheels, color, seats: [], seatPos: [-0.33, 0.33].map((x) => new THREE.Vector3(x, 0.7, 0)) };
 }
 function locomotive() {
   const g = new THREE.Group(), C = 0x5a6c9a, GOLD = 0xffd23f, RED = 0xff5d73;
